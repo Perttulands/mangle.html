@@ -447,6 +447,123 @@
             background: white;
             box-shadow: 0 4px 20px var(--shadow);
             position: relative;
+            transition: width 0.3s ease, height 0.3s ease;
+        }
+
+        /* Device Frame */
+        .device-frame {
+            position: relative;
+            padding: 12px;
+            background: #1a1a1a;
+            border-radius: 20px;
+            box-shadow: 0 8px 32px rgba(0, 0, 0, 0.4);
+        }
+
+        .device-frame::before {
+            content: '';
+            position: absolute;
+            top: 6px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 60px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .device-frame.phone {
+            border-radius: 28px;
+            padding: 40px 8px 24px;
+        }
+
+        .device-frame.phone::before {
+            top: 12px;
+            width: 40px;
+        }
+
+        .device-frame.phone::after {
+            content: '';
+            position: absolute;
+            bottom: 8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 36px;
+            height: 4px;
+            background: #333;
+            border-radius: 2px;
+        }
+
+        .device-frame.tablet {
+            border-radius: 16px;
+            padding: 24px 12px;
+        }
+
+        .device-frame.desktop {
+            border-radius: 8px 8px 0 0;
+            padding: 24px 4px 4px;
+        }
+
+        .device-frame.desktop::after {
+            content: '';
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 120px;
+            height: 20px;
+            background: linear-gradient(to bottom, #1a1a1a, #333);
+            border-radius: 0 0 4px 4px;
+        }
+
+        .device-frame.fullwidth {
+            padding: 0;
+            background: none;
+            border-radius: 0;
+            box-shadow: none;
+        }
+
+        .device-frame.fullwidth::before,
+        .device-frame.fullwidth::after {
+            display: none;
+        }
+
+        /* Viewport selector */
+        .viewport-selector {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+            background: var(--bg-input);
+            border-radius: 4px;
+            padding: 2px;
+        }
+
+        .viewport-btn {
+            background: transparent;
+            border: none;
+            color: var(--text-secondary);
+            padding: 4px 8px;
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 14px;
+            transition: all 0.15s;
+        }
+
+        .viewport-btn:hover {
+            background: var(--bg-panel);
+            color: var(--text-primary);
+        }
+
+        .viewport-btn.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        .viewport-size {
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 0 8px;
+            min-width: 60px;
+            text-align: center;
         }
 
         /* Grid Overlay */
@@ -995,6 +1112,16 @@
                 </button>
             </div>
 
+            <div class="toolbar-section">
+                <div class="viewport-selector" id="viewport-selector">
+                    <button class="viewport-btn" data-viewport="phone" title="Phone (375px)">📱</button>
+                    <button class="viewport-btn" data-viewport="tablet" title="Tablet (768px)">📟</button>
+                    <button class="viewport-btn" data-viewport="desktop" title="Desktop (1200px)">🖥️</button>
+                    <button class="viewport-btn active" data-viewport="fullwidth" title="Full Width">⬜</button>
+                </div>
+                <span class="viewport-size" id="viewport-size">800 × 600</span>
+            </div>
+
             <div class="toolbar-section zoom-controls">
                 <button class="btn btn-icon" id="btn-zoom-out" title="Zoom Out (-)">−</button>
                 <span class="zoom-level" id="zoom-level" title="Click to reset to 100%">100%</span>
@@ -1078,12 +1205,14 @@
             </div>
             <div class="canvas-viewport" id="canvas-viewport">
                 <div class="canvas-transform" id="canvas-transform">
-                    <div class="canvas-wrapper hidden" id="canvas-wrapper">
-                        <iframe id="preview-frame" width="800" height="600"></iframe>
-                        <div class="grid-overlay" id="grid-overlay">
-                            <svg id="grid-svg"></svg>
+                    <div class="device-frame fullwidth" id="device-frame">
+                        <div class="canvas-wrapper hidden" id="canvas-wrapper">
+                            <iframe id="preview-frame" width="800" height="600"></iframe>
+                            <div class="grid-overlay" id="grid-overlay">
+                                <svg id="grid-svg"></svg>
+                            </div>
+                            <div id="guide-container"></div>
                         </div>
-                        <div id="guide-container"></div>
                     </div>
                 </div>
             </div>
@@ -1296,7 +1425,15 @@
             gridVisible: false,
             gridSize: 20,
             snapThreshold: 8,
-            guides: []
+            guides: [],
+            // Responsive viewport state
+            currentViewport: 'fullwidth',
+            viewportSizes: {
+                phone: { width: 375, height: 667 },
+                tablet: { width: 768, height: 1024 },
+                desktop: { width: 1200, height: 800 },
+                fullwidth: { width: 800, height: 600 }
+            }
         };
 
         // =========================================================================
@@ -1330,6 +1467,9 @@
             gridSvg: document.getElementById('grid-svg'),
             guideContainer: document.getElementById('guide-container'),
             btnGrid: document.getElementById('btn-grid'),
+            deviceFrame: document.getElementById('device-frame'),
+            viewportSelector: document.getElementById('viewport-selector'),
+            viewportSize: document.getElementById('viewport-size'),
             elementTree: document.getElementById('element-tree'),
             treeSearchInput: document.getElementById('tree-search-input'),
             treeSearchWrapper: document.getElementById('tree-search-wrapper'),
@@ -1577,6 +1717,51 @@
         function clearGuides() {
             elements.guideContainer.innerHTML = '';
             state.guides = [];
+        }
+
+        // =========================================================================
+        // Responsive Viewport
+        // =========================================================================
+
+        function setViewport(viewport) {
+            const size = state.viewportSizes[viewport];
+            if (!size) return;
+
+            state.currentViewport = viewport;
+
+            // Update iframe size
+            elements.previewFrame.width = size.width;
+            elements.previewFrame.height = size.height;
+
+            // Update device frame class
+            elements.deviceFrame.className = 'device-frame ' + viewport;
+
+            // Update viewport buttons
+            elements.viewportSelector.querySelectorAll('.viewport-btn').forEach(btn => {
+                btn.classList.toggle('active', btn.dataset.viewport === viewport);
+            });
+
+            // Update size display
+            elements.viewportSize.textContent = size.width + ' × ' + size.height;
+
+            // Re-render grid if visible
+            if (state.gridVisible) {
+                renderGrid();
+            }
+
+            // Center the canvas
+            requestAnimationFrame(() => {
+                centerCanvas();
+            });
+        }
+
+        function initViewportSelector() {
+            elements.viewportSelector.addEventListener('click', (e) => {
+                const btn = e.target.closest('.viewport-btn');
+                if (btn && btn.dataset.viewport) {
+                    setViewport(btn.dataset.viewport);
+                }
+            });
         }
 
         // =========================================================================
@@ -3470,6 +3655,9 @@
 
         // Grid toggle
         elements.btnGrid.addEventListener('click', toggleGrid);
+
+        // Viewport selector
+        initViewportSelector();
 
         // Initialize transform
         updateTransform();
