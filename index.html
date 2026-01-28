@@ -240,6 +240,11 @@
             opacity: 0.5;
         }
 
+        .tree-node.cloning {
+            opacity: 0.8;
+            background: rgba(76, 175, 80, 0.2);
+        }
+
         .tree-node.drag-over-before::before {
             content: '';
             position: absolute;
@@ -263,6 +268,17 @@
         .tree-node.drag-over-inside {
             background: var(--selected);
             outline: 1px dashed var(--accent);
+        }
+
+        .tree-node.clone-target::before {
+            content: '+';
+            position: absolute;
+            left: 4px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: #4caf50;
+            font-weight: bold;
+            font-size: 14px;
         }
 
         .tree-node-icon {
@@ -681,6 +697,8 @@
             redoStack: [],
             maxUndoSteps: 50,
             draggedPath: null,
+            // Alt+drag cloning state
+            isAltDrag: false,
             // Zoom & Pan state
             zoom: 1,
             panX: 0,
@@ -1136,14 +1154,17 @@
                         return;
                     }
                     state.draggedPath = path;
-                    node.classList.add('dragging');
-                    e.dataTransfer.effectAllowed = 'move';
+                    // Check if Alt is held at drag start
+                    state.isAltDrag = e.altKey;
+                    node.classList.add(state.isAltDrag ? 'cloning' : 'dragging');
+                    e.dataTransfer.effectAllowed = state.isAltDrag ? 'copy' : 'move';
                     e.dataTransfer.setData('text/plain', path.join(','));
                 });
 
                 node.addEventListener('dragend', () => {
-                    node.classList.remove('dragging');
+                    node.classList.remove('dragging', 'cloning');
                     state.draggedPath = null;
+                    state.isAltDrag = false;
                     clearDragIndicators();
                 });
 
@@ -1153,13 +1174,18 @@
 
                     const targetPath = path;
                     if (isDescendantPath(targetPath, state.draggedPath)) return;
-                    if (pathsEqual(targetPath, state.draggedPath)) return;
+                    if (!state.isAltDrag && !e.altKey && pathsEqual(targetPath, state.draggedPath)) return;
 
                     clearDragIndicators();
 
                     const rect = node.getBoundingClientRect();
                     const y = e.clientY - rect.top;
                     const height = rect.height;
+
+                    // Show clone indicator if Alt is held
+                    if (e.altKey || state.isAltDrag) {
+                        node.classList.add('clone-target');
+                    }
 
                     if (y < height * 0.25) {
                         node.classList.add('drag-over-before');
@@ -1171,7 +1197,7 @@
                 });
 
                 node.addEventListener('dragleave', () => {
-                    node.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+                    node.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside', 'clone-target');
                 });
 
                 node.addEventListener('drop', (e) => {
@@ -1181,8 +1207,10 @@
                     if (!state.draggedPath) return;
 
                     const targetPath = path;
+                    // For cloning, allow dropping on self (creates sibling)
+                    const isCloning = e.altKey || state.isAltDrag;
                     if (isDescendantPath(targetPath, state.draggedPath)) return;
-                    if (pathsEqual(targetPath, state.draggedPath)) return;
+                    if (!isCloning && pathsEqual(targetPath, state.draggedPath)) return;
 
                     const rect = node.getBoundingClientRect();
                     const y = e.clientY - rect.top;
@@ -1197,7 +1225,11 @@
                         dropPosition = 'inside';
                     }
 
-                    moveElement(state.draggedPath, targetPath, dropPosition);
+                    if (isCloning) {
+                        cloneElementToPosition(state.draggedPath, targetPath, dropPosition);
+                    } else {
+                        moveElement(state.draggedPath, targetPath, dropPosition);
+                    }
                 });
 
                 elements.elementTree.appendChild(node);
@@ -1212,7 +1244,7 @@
 
         function clearDragIndicators() {
             document.querySelectorAll('.tree-node').forEach(n => {
-                n.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside');
+                n.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside', 'clone-target');
             });
         }
 
@@ -1255,6 +1287,44 @@
 
             // Reselect the moved element
             const newPath = getElementPath(sourceElement, doc.body);
+            selectElementByPath(newPath);
+        }
+
+        // Clone element to a specific position (Alt+drag)
+        function cloneElementToPosition(sourcePath, targetPath, dropPosition) {
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+
+            const sourceElement = getElementByPath(sourcePath);
+            const targetElement = getElementByPath(targetPath);
+
+            if (!sourceElement || !targetElement) return;
+
+            const tag = sourceElement.tagName.toUpperCase();
+            if (tag === 'BODY' || tag === 'HTML' || tag === 'HEAD') return;
+
+            saveState();
+
+            // Clone the element
+            const clone = sourceElement.cloneNode(true);
+            clone.classList.remove('editor-selected', 'editor-hover');
+
+            if (dropPosition === 'inside') {
+                targetElement.appendChild(clone);
+            } else if (dropPosition === 'before') {
+                targetElement.parentElement.insertBefore(clone, targetElement);
+            } else if (dropPosition === 'after') {
+                if (targetElement.nextSibling) {
+                    targetElement.parentElement.insertBefore(clone, targetElement.nextSibling);
+                } else {
+                    targetElement.parentElement.appendChild(clone);
+                }
+            }
+
+            buildElementTree(doc.body);
+
+            // Select the cloned element
+            const newPath = getElementPath(clone, doc.body);
             selectElementByPath(newPath);
         }
 
@@ -1489,7 +1559,7 @@
         }
 
         // =========================================================================
-        // Copy/Paste
+        // Copy/Paste/Duplicate
         // =========================================================================
 
         function copySelectedElements() {
@@ -1538,14 +1608,28 @@
             buildElementTree(doc.body);
 
             // Clear current selection and select the duplicated elements
-            clearSelection();
-            newElements.forEach((el, index) => {
-                if (index === 0) {
-                    selectElement(el);
-                } else {
-                    addToSelection(el);
+            clearAllSelectionHighlights();
+            state.selectedElements = [];
+            state.selectedPaths = [];
+
+            newElements.forEach((el) => {
+                const path = getElementPath(el, doc.body);
+                el.classList.add('editor-selected');
+                state.selectedElements.push(el);
+                state.selectedPaths.push(path);
+
+                const treeNode = document.querySelector('.tree-node[data-path="' + path.join(',') + '"]');
+                if (treeNode) {
+                    treeNode.classList.add('selected');
                 }
             });
+
+            // Update primary selection
+            if (newElements.length > 0) {
+                state.selectedElement = newElements[newElements.length - 1];
+                state.selectedPath = state.selectedPaths[state.selectedPaths.length - 1];
+                showProperties(state.selectedElement);
+            }
 
             return true;
         }
@@ -1571,7 +1655,7 @@
 
             // Update property panel if single selection
             if (state.selectedElement) {
-                updatePropertyPanel();
+                showProperties(state.selectedElement);
             }
 
             return true;
@@ -1849,6 +1933,7 @@
                     e.preventDefault();
                     pasteElements();
                 }
+                // Ctrl+D - duplicate element as sibling below
                 if (e.key === 'd' && !isInputFocused) {
                     e.preventDefault();
                     duplicateSelectedElement();
