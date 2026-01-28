@@ -45,8 +45,8 @@
 - [x] Zoom indicator + fit-to-screen
 - [ ] Add new elements (div, p, img, button, etc.)
 - [x] Delete elements (backspace/delete key)
-- [ ] Multi-select (shift+click, cmd+click)
-- [ ] Copy/paste elements (Ctrl+C, Ctrl+V)
+- [x] Multi-select (shift+click, cmd+click)
+- [x] Copy/paste elements (Ctrl+C, Ctrl+V)
 - [ ] Duplicate element (Ctrl+D or Alt+drag)
 - [ ] Keyboard shortcuts system
 

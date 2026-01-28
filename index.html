@@ -563,6 +563,11 @@
             currentHtml: '',
             selectedElement: null,
             selectedPath: null,
+            // Multi-select support
+            selectedElements: [],
+            selectedPaths: [],
+            // Clipboard for copy/paste
+            clipboard: [],
             fileName: 'document.html',
             undoStack: [],
             redoStack: [],
@@ -911,7 +916,10 @@
 
                 node.addEventListener('click', (e) => {
                     if (!e.defaultPrevented) {
-                        selectElementByPath(path);
+                        selectElementByPath(path, {
+                            addToSelection: e.shiftKey,
+                            toggleSelection: e.ctrlKey || e.metaKey
+                        });
                     }
                 });
 
@@ -1083,7 +1091,10 @@
                 e.preventDefault();
                 e.stopPropagation();
                 const path = getElementPath(e.target, doc.body);
-                selectElementByPath(path);
+                selectElementByPath(path, {
+                    addToSelection: e.shiftKey,
+                    toggleSelection: e.ctrlKey || e.metaKey
+                });
             });
 
             doc.body.addEventListener('dblclick', (e) => {
@@ -1126,35 +1137,98 @@
             return element;
         }
 
-        function selectElementByPath(path) {
-            if (state.selectedElement) {
-                state.selectedElement.classList.remove('editor-selected');
+        function selectElementByPath(path, options = {}) {
+            const { addToSelection = false, toggleSelection = false } = options;
+            const pathStr = path.join(',');
+
+            // Check if already selected
+            const existingIndex = state.selectedPaths.findIndex(p => p.join(',') === pathStr);
+            const isAlreadySelected = existingIndex !== -1;
+
+            if (toggleSelection && isAlreadySelected) {
+                // Remove from selection
+                removeFromSelection(existingIndex);
+                return;
             }
 
-            document.querySelectorAll('.tree-node.selected').forEach(n => n.classList.remove('selected'));
-            const treeNode = document.querySelector('.tree-node[data-path="' + path.join(',') + '"]');
-            if (treeNode) {
-                treeNode.classList.add('selected');
-                treeNode.scrollIntoView({ block: 'nearest' });
+            if (!addToSelection && !toggleSelection) {
+                // Clear existing selection
+                clearAllSelectionHighlights();
+                state.selectedElements = [];
+                state.selectedPaths = [];
+            }
+
+            if (isAlreadySelected && (addToSelection || toggleSelection)) {
+                // Already selected, don't add again
+                return;
             }
 
             const element = getElementByPath(path);
             if (element) {
+                // Add to selection
                 element.classList.add('editor-selected');
+                state.selectedElements.push(element);
+                state.selectedPaths.push(path);
+
+                // Update primary selection (last selected)
                 state.selectedElement = element;
                 state.selectedPath = path;
+
+                // Highlight tree node
+                const treeNode = document.querySelector('.tree-node[data-path="' + pathStr + '"]');
+                if (treeNode) {
+                    treeNode.classList.add('selected');
+                    treeNode.scrollIntoView({ block: 'nearest' });
+                }
+
                 showProperties(element);
             }
         }
 
-        function clearSelection() {
-            if (state.selectedElement) {
-                state.selectedElement.classList.remove('editor-selected');
+        function removeFromSelection(index) {
+            const element = state.selectedElements[index];
+            const path = state.selectedPaths[index];
+
+            if (element) {
+                element.classList.remove('editor-selected');
             }
+
+            // Remove from tree
+            const treeNode = document.querySelector('.tree-node[data-path="' + path.join(',') + '"]');
+            if (treeNode) {
+                treeNode.classList.remove('selected');
+            }
+
+            // Remove from arrays
+            state.selectedElements.splice(index, 1);
+            state.selectedPaths.splice(index, 1);
+
+            // Update primary selection
+            if (state.selectedElements.length > 0) {
+                state.selectedElement = state.selectedElements[state.selectedElements.length - 1];
+                state.selectedPath = state.selectedPaths[state.selectedPaths.length - 1];
+                showProperties(state.selectedElement);
+            } else {
+                state.selectedElement = null;
+                state.selectedPath = null;
+                elements.noSelection.style.display = 'block';
+                elements.propertySections.style.display = 'none';
+            }
+        }
+
+        function clearAllSelectionHighlights() {
+            state.selectedElements.forEach(el => {
+                if (el) el.classList.remove('editor-selected');
+            });
+            document.querySelectorAll('.tree-node.selected').forEach(n => n.classList.remove('selected'));
+        }
+
+        function clearSelection() {
+            clearAllSelectionHighlights();
             state.selectedElement = null;
             state.selectedPath = null;
-
-            document.querySelectorAll('.tree-node.selected').forEach(n => n.classList.remove('selected'));
+            state.selectedElements = [];
+            state.selectedPaths = [];
 
             elements.noSelection.style.display = 'block';
             elements.propertySections.style.display = 'none';
@@ -1165,32 +1239,89 @@
         // =========================================================================
 
         function deleteSelectedElement() {
-            if (!state.selectedElement || !state.selectedPath) return false;
+            if (state.selectedElements.length === 0) return false;
 
-            const element = state.selectedElement;
             const frame = elements.previewFrame;
             const doc = frame.contentDocument || frame.contentWindow.document;
 
-            // Don't delete body, html, head, or root-level structural elements
-            const tag = element.tagName.toUpperCase();
-            if (tag === 'BODY' || tag === 'HTML' || tag === 'HEAD') {
-                return false;
-            }
+            // Filter out elements that can't be deleted
+            const deletableElements = state.selectedElements.filter(element => {
+                const tag = element.tagName.toUpperCase();
+                if (tag === 'BODY' || tag === 'HTML' || tag === 'HEAD') {
+                    return false;
+                }
+                return true;
+            });
 
-            // Don't delete if it's the only child of body (would leave body empty)
-            if (element.parentElement === doc.body && doc.body.children.length === 1) {
+            if (deletableElements.length === 0) return false;
+
+            // Check if deleting would leave body empty
+            const bodyChildren = Array.from(doc.body.children);
+            const remainingChildren = bodyChildren.filter(child =>
+                !deletableElements.includes(child)
+            );
+            if (remainingChildren.length === 0) {
+                // Can't delete all children of body
                 return false;
             }
 
             // Save state for undo
             saveState();
 
-            // Remove the element
-            const parent = element.parentElement;
-            parent.removeChild(element);
+            // Remove all deletable elements
+            deletableElements.forEach(element => {
+                if (element.parentElement) {
+                    element.parentElement.removeChild(element);
+                }
+            });
 
             // Clear selection and rebuild tree
             clearSelection();
+            buildElementTree(doc.body);
+
+            return true;
+        }
+
+        // =========================================================================
+        // Copy/Paste
+        // =========================================================================
+
+        function copySelectedElements() {
+            if (state.selectedElements.length === 0) return false;
+
+            // Clone all selected elements (without editor classes)
+            state.clipboard = state.selectedElements.map(el => {
+                const clone = el.cloneNode(true);
+                clone.classList.remove('editor-selected', 'editor-hover');
+                return clone.outerHTML;
+            });
+
+            return true;
+        }
+
+        function pasteElements() {
+            if (state.clipboard.length === 0) return false;
+            if (!state.selectedElement) return false;
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+
+            // Save state for undo
+            saveState();
+
+            // Paste as children of the currently selected element
+            const target = state.selectedElement;
+
+            state.clipboard.forEach(html => {
+                const temp = doc.createElement('div');
+                temp.innerHTML = html;
+                const newElement = temp.firstElementChild;
+                if (newElement) {
+                    target.appendChild(newElement);
+                }
+            });
+
+            // Rebuild tree
             buildElementTree(doc.body);
 
             return true;
@@ -1375,6 +1506,14 @@
                 if (e.key === 'y') {
                     e.preventDefault();
                     redo();
+                }
+                if (e.key === 'c' && !isInputFocused) {
+                    e.preventDefault();
+                    copySelectedElements();
+                }
+                if (e.key === 'v' && !isInputFocused) {
+                    e.preventDefault();
+                    pasteElements();
                 }
                 if (e.key === '0') {
                     e.preventDefault();
