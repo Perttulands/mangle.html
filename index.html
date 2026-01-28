@@ -337,7 +337,7 @@
             display: none;
         }
 
-        .drop-zone {
+        .welcome-screen {
             position: absolute;
             inset: 0;
             display: flex;
@@ -345,23 +345,173 @@
             align-items: center;
             justify-content: center;
             background: var(--bg-dark);
-            color: var(--text-secondary);
-            font-size: 16px;
+            color: var(--text);
             z-index: 10;
+            padding: 40px;
+            overflow-y: auto;
         }
 
-        .drop-zone.hidden {
+        .welcome-screen.hidden {
             display: none;
         }
 
+        .welcome-content {
+            max-width: 600px;
+            text-align: center;
+        }
+
+        .welcome-logo {
+            font-size: 64px;
+            margin-bottom: 16px;
+            filter: drop-shadow(0 4px 8px rgba(0,120,212,0.3));
+        }
+
+        .welcome-title {
+            font-size: 32px;
+            font-weight: 700;
+            margin-bottom: 8px;
+            background: linear-gradient(135deg, var(--accent), #00d4ff);
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+        }
+
+        .welcome-subtitle {
+            font-size: 16px;
+            color: var(--text-secondary);
+            margin-bottom: 32px;
+        }
+
+        .drop-zone {
+            border: 2px dashed var(--border);
+            border-radius: 16px;
+            padding: 48px 32px;
+            margin-bottom: 24px;
+            transition: all 0.2s ease;
+            cursor: pointer;
+            background: rgba(255,255,255,0.02);
+        }
+
+        .drop-zone:hover {
+            border-color: var(--accent);
+            background: rgba(0,120,212,0.05);
+        }
+
         .drop-zone.dragover {
-            background: var(--selected);
-            border: 2px dashed var(--accent);
+            border-color: var(--accent);
+            background: rgba(0,120,212,0.1);
+            transform: scale(1.02);
         }
 
         .drop-zone-icon {
-            font-size: 48px;
+            font-size: 56px;
             margin-bottom: 16px;
+            opacity: 0.8;
+        }
+
+        .drop-zone-text {
+            font-size: 18px;
+            font-weight: 500;
+            margin-bottom: 8px;
+        }
+
+        .drop-zone-hint {
+            font-size: 14px;
+            color: var(--text-secondary);
+        }
+
+        .welcome-divider {
+            display: flex;
+            align-items: center;
+            gap: 16px;
+            margin: 24px 0;
+            color: var(--text-secondary);
+            font-size: 13px;
+        }
+
+        .welcome-divider::before,
+        .welcome-divider::after {
+            content: '';
+            flex: 1;
+            height: 1px;
+            background: var(--border);
+        }
+
+        .btn-sample {
+            background: linear-gradient(135deg, var(--accent), #0066b8);
+            color: white;
+            border: none;
+            padding: 14px 32px;
+            font-size: 15px;
+            font-weight: 600;
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.2s ease;
+            display: inline-flex;
+            align-items: center;
+            gap: 8px;
+        }
+
+        .btn-sample:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 16px rgba(0,120,212,0.4);
+        }
+
+        .btn-sample:active {
+            transform: translateY(0);
+        }
+
+        .features-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 16px;
+            margin-top: 40px;
+            text-align: left;
+        }
+
+        .feature-card {
+            background: rgba(255,255,255,0.03);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 16px;
+            transition: all 0.2s ease;
+        }
+
+        .feature-card:hover {
+            border-color: var(--accent);
+            background: rgba(0,120,212,0.05);
+        }
+
+        .feature-icon {
+            font-size: 24px;
+            margin-bottom: 8px;
+        }
+
+        .feature-title {
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 4px;
+        }
+
+        .feature-desc {
+            font-size: 12px;
+            color: var(--text-secondary);
+            line-height: 1.4;
+        }
+
+        .shortcuts-hint {
+            margin-top: 32px;
+            font-size: 12px;
+            color: var(--text-secondary);
+        }
+
+        .shortcuts-hint kbd {
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            padding: 2px 6px;
+            font-family: inherit;
+            font-size: 11px;
         }
 
         /* Toast Notifications */
@@ -633,10 +783,50 @@
 
         <!-- Canvas -->
         <main class="canvas-area" id="canvas-area">
-            <div class="drop-zone" id="drop-zone">
-                <div class="drop-zone-icon">📄</div>
-                <div>Drop HTML file here</div>
-                <div style="margin-top: 8px; font-size: 13px;">or click Open to browse</div>
+            <div class="welcome-screen" id="welcome-screen">
+                <div class="welcome-content">
+                    <div class="welcome-logo">✨</div>
+                    <h1 class="welcome-title">mangle.html</h1>
+                    <p class="welcome-subtitle">The Figma of HTML editing. Load any HTML, edit visually, export clean code.</p>
+
+                    <div class="drop-zone" id="drop-zone">
+                        <div class="drop-zone-icon">📄</div>
+                        <div class="drop-zone-text">Drop HTML file here</div>
+                        <div class="drop-zone-hint">or click to browse</div>
+                    </div>
+
+                    <div class="welcome-divider">or</div>
+
+                    <button class="btn-sample" id="btn-sample">
+                        <span>✨</span>
+                        <span>Try with sample file</span>
+                    </button>
+
+                    <div class="features-grid">
+                        <div class="feature-card">
+                            <div class="feature-icon">🖱️</div>
+                            <div class="feature-title">Direct Selection</div>
+                            <div class="feature-desc">Click any element to select. Shift+click for multi-select.</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🎨</div>
+                            <div class="feature-title">Visual Styling</div>
+                            <div class="feature-desc">Edit colors, fonts, margins and padding instantly.</div>
+                        </div>
+                        <div class="feature-card">
+                            <div class="feature-icon">🌲</div>
+                            <div class="feature-title">DOM Tree</div>
+                            <div class="feature-desc">Drag nodes to reorder. Alt+drag to clone elements.</div>
+                        </div>
+                    </div>
+
+                    <div class="shortcuts-hint">
+                        <kbd>Ctrl</kbd>+<kbd>Z</kbd> Undo &nbsp;
+                        <kbd>Ctrl</kbd>+<kbd>D</kbd> Duplicate &nbsp;
+                        <kbd>↑↓←→</kbd> Nudge &nbsp;
+                        <kbd>Space</kbd>+drag Pan
+                    </div>
+                </div>
             </div>
             <div class="canvas-viewport" id="canvas-viewport">
                 <div class="canvas-transform" id="canvas-transform">
@@ -823,7 +1013,9 @@
             btnZoomOut: document.getElementById('btn-zoom-out'),
             btnFit: document.getElementById('btn-fit'),
             zoomLevel: document.getElementById('zoom-level'),
+            welcomeScreen: document.getElementById('welcome-screen'),
             dropZone: document.getElementById('drop-zone'),
+            btnSample: document.getElementById('btn-sample'),
             canvasArea: document.getElementById('canvas-area'),
             canvasViewport: document.getElementById('canvas-viewport'),
             canvasTransform: document.getElementById('canvas-transform'),
@@ -889,6 +1081,80 @@
             if (!toast.parentElement) return;
             toast.classList.add('toast-out');
             setTimeout(() => toast.remove(), 300);
+        }
+
+        // =========================================================================
+        // Sample HTML
+        // =========================================================================
+
+        const SAMPLE_HTML = `<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Sample Landing Page</title>
+</head>
+<body style="margin: 0; font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%); min-height: 100vh;">
+    <header style="padding: 20px 40px; display: flex; justify-content: space-between; align-items: center;">
+        <div style="color: white; font-size: 24px; font-weight: bold;">✨ Acme</div>
+        <nav style="display: flex; gap: 24px;">
+            <a href="#" style="color: rgba(255,255,255,0.9); text-decoration: none;">Features</a>
+            <a href="#" style="color: rgba(255,255,255,0.9); text-decoration: none;">Pricing</a>
+            <a href="#" style="color: rgba(255,255,255,0.9); text-decoration: none;">About</a>
+        </nav>
+    </header>
+
+    <main style="max-width: 800px; margin: 0 auto; padding: 80px 40px; text-align: center;">
+        <h1 style="color: white; font-size: 48px; margin-bottom: 24px; font-weight: 700;">Build something amazing</h1>
+        <p style="color: rgba(255,255,255,0.85); font-size: 20px; line-height: 1.6; margin-bottom: 40px;">The fastest way to create beautiful websites. No coding required. Just drag, drop, and publish.</p>
+
+        <div style="display: flex; gap: 16px; justify-content: center; margin-bottom: 60px;">
+            <button style="background: white; color: #667eea; border: none; padding: 16px 32px; font-size: 16px; font-weight: 600; border-radius: 8px; cursor: pointer;">Get Started Free</button>
+            <button style="background: transparent; color: white; border: 2px solid rgba(255,255,255,0.5); padding: 16px 32px; font-size: 16px; font-weight: 600; border-radius: 8px; cursor: pointer;">Watch Demo</button>
+        </div>
+
+        <div style="display: grid; grid-template-columns: repeat(3, 1fr); gap: 24px; text-align: left;">
+            <div style="background: rgba(255,255,255,0.1); padding: 24px; border-radius: 12px;">
+                <div style="font-size: 32px; margin-bottom: 12px;">🚀</div>
+                <h3 style="color: white; margin: 0 0 8px 0; font-size: 18px;">Lightning Fast</h3>
+                <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px; line-height: 1.5;">Built for speed. Your sites load in milliseconds.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 24px; border-radius: 12px;">
+                <div style="font-size: 32px; margin-bottom: 12px;">🎨</div>
+                <h3 style="color: white; margin: 0 0 8px 0; font-size: 18px;">Beautiful Design</h3>
+                <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px; line-height: 1.5;">Stunning templates that look great everywhere.</p>
+            </div>
+            <div style="background: rgba(255,255,255,0.1); padding: 24px; border-radius: 12px;">
+                <div style="font-size: 32px; margin-bottom: 12px;">🔒</div>
+                <h3 style="color: white; margin: 0 0 8px 0; font-size: 18px;">Secure & Reliable</h3>
+                <p style="color: rgba(255,255,255,0.7); margin: 0; font-size: 14px; line-height: 1.5;">Enterprise-grade security you can trust.</p>
+            </div>
+        </div>
+    </main>
+
+    <footer style="text-align: center; padding: 40px; color: rgba(255,255,255,0.6); font-size: 14px;">
+        © 2024 Acme Inc. All rights reserved.
+    </footer>
+</body>
+</html>`;
+
+        function loadSampleHtml() {
+            state.fileName = 'sample.html';
+            state.originalHtml = SAMPLE_HTML;
+            loadHtmlIntoFrame(state.originalHtml, true);
+
+            elements.welcomeScreen.classList.add('hidden');
+            elements.canvasWrapper.classList.remove('hidden');
+            elements.btnExport.disabled = false;
+            elements.btnInsert.disabled = false;
+            state.documentLoaded = true;
+
+            state.zoom = 1;
+            requestAnimationFrame(() => {
+                centerCanvas();
+            });
+
+            showToast('success', 'Sample loaded', 'Try selecting elements and editing their properties!');
         }
 
         // =========================================================================
@@ -1226,7 +1492,7 @@
                 state.originalHtml = content;
                 loadHtmlIntoFrame(state.originalHtml, true);
 
-                elements.dropZone.classList.add('hidden');
+                elements.welcomeScreen.classList.add('hidden');
                 elements.canvasWrapper.classList.remove('hidden');
                 elements.btnExport.disabled = false;
                 elements.btnInsert.disabled = false;
@@ -2064,6 +2330,12 @@
         elements.fileInput.addEventListener('change', (e) => {
             if (e.target.files[0]) handleFile(e.target.files[0]);
         });
+
+        // Sample button
+        elements.btnSample.addEventListener('click', loadSampleHtml);
+
+        // Drop zone - click to open file picker
+        elements.dropZone.addEventListener('click', () => elements.fileInput.click());
 
         elements.dropZone.addEventListener('dragover', (e) => {
             e.preventDefault();

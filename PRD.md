@@ -62,7 +62,7 @@
 ### P3 - Delight
 - [ ] Smooth animations throughout
 - [ ] Tooltips with keyboard hints
-- [ ] Welcome screen with sample file
+- [x] Welcome screen with sample file
 - [ ] Context menu (right-click)
 - [ ] Minimap preview
 - [ ] Command palette (Ctrl+K)
