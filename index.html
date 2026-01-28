@@ -2758,6 +2758,7 @@
             doc.body.addEventListener('mouseout', (e) => {
                 if (e.target !== state.selectedElement) {
                     e.target.classList.remove('editor-hover');
+                    clearGuides();
                 }
             });
 
