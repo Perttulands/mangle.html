@@ -47,8 +47,8 @@
 - [x] Delete elements (backspace/delete key)
 - [x] Multi-select (shift+click, cmd+click)
 - [x] Copy/paste elements (Ctrl+C, Ctrl+V)
-- [ ] Duplicate element (Ctrl+D or Alt+drag)
-- [ ] Keyboard shortcuts system
+- [x] Duplicate element (Ctrl+D)
+- [x] Keyboard shortcuts system
 
 ### P2 - Polish
 - [ ] Responsive preview (phone/tablet/desktop)

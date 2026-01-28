@@ -512,7 +512,7 @@
             </div>
 
             <div class="toolbar-section" style="margin-left: auto;">
-                <button class="btn btn-primary" id="btn-export" disabled>
+                <button class="btn btn-primary" id="btn-export" disabled title="Download modified HTML">
                     <span>Export HTML</span>
                 </button>
             </div>
@@ -1505,6 +1505,78 @@
             return true;
         }
 
+        function duplicateSelectedElement() {
+            if (state.selectedElements.length === 0) return false;
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+
+            // Filter out elements that can't be duplicated
+            const duplicatableElements = state.selectedElements.filter(element => {
+                const tag = element.tagName.toUpperCase();
+                if (tag === 'BODY' || tag === 'HTML' || tag === 'HEAD') {
+                    return false;
+                }
+                return true;
+            });
+
+            if (duplicatableElements.length === 0) return false;
+
+            // Save state for undo
+            saveState();
+
+            // Duplicate each element right after its original
+            const newElements = [];
+            duplicatableElements.forEach(element => {
+                const clone = element.cloneNode(true);
+                clone.classList.remove('editor-selected', 'editor-hover');
+                element.parentElement.insertBefore(clone, element.nextSibling);
+                newElements.push(clone);
+            });
+
+            // Update tree and select the new elements
+            buildElementTree(doc.body);
+
+            // Clear current selection and select the duplicated elements
+            clearSelection();
+            newElements.forEach((el, index) => {
+                if (index === 0) {
+                    selectElement(el);
+                } else {
+                    addToSelection(el);
+                }
+            });
+
+            return true;
+        }
+
+        function nudgeSelectedElements(dx, dy) {
+            if (state.selectedElements.length === 0) return false;
+
+            // Save state for undo
+            saveState();
+
+            state.selectedElements.forEach(element => {
+                const style = element.style;
+                const computedStyle = window.getComputedStyle(element);
+
+                // Get current position or margins
+                let currentLeft = parseInt(style.marginLeft) || parseInt(computedStyle.marginLeft) || 0;
+                let currentTop = parseInt(style.marginTop) || parseInt(computedStyle.marginTop) || 0;
+
+                // Apply nudge to margins
+                element.style.marginLeft = (currentLeft + dx) + 'px';
+                element.style.marginTop = (currentTop + dy) + 'px';
+            });
+
+            // Update property panel if single selection
+            if (state.selectedElement) {
+                updatePropertyPanel();
+            }
+
+            return true;
+        }
+
         function pasteElements() {
             if (state.clipboard.length === 0) return false;
             if (!state.selectedElement) return false;
@@ -1726,6 +1798,39 @@
                 }
             }
 
+            // Escape to deselect
+            if (e.key === 'Escape' && !isInputFocused) {
+                e.preventDefault();
+                clearSelection();
+            }
+
+            // Arrow keys to nudge position (with Shift for larger increments)
+            if (['ArrowUp', 'ArrowDown', 'ArrowLeft', 'ArrowRight'].includes(e.key) && !isInputFocused) {
+                const frame = elements.previewFrame;
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                const frameActive = frameDoc.activeElement;
+                const isFrameEditing = frameActive && frameActive.isContentEditable;
+
+                if (!isFrameEditing && state.selectedElement) {
+                    e.preventDefault();
+                    const step = e.shiftKey ? 10 : 1;
+                    switch (e.key) {
+                        case 'ArrowUp':
+                            nudgeSelectedElements(0, -step);
+                            break;
+                        case 'ArrowDown':
+                            nudgeSelectedElements(0, step);
+                            break;
+                        case 'ArrowLeft':
+                            nudgeSelectedElements(-step, 0);
+                            break;
+                        case 'ArrowRight':
+                            nudgeSelectedElements(step, 0);
+                            break;
+                    }
+                }
+            }
+
             if (e.ctrlKey || e.metaKey) {
                 if (e.key === 'z') {
                     e.preventDefault();
@@ -1743,6 +1848,10 @@
                 if (e.key === 'v' && !isInputFocused) {
                     e.preventDefault();
                     pasteElements();
+                }
+                if (e.key === 'd' && !isInputFocused) {
+                    e.preventDefault();
+                    duplicateSelectedElement();
                 }
                 if (e.key === '0') {
                     e.preventDefault();
