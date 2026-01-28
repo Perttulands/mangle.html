@@ -12,6 +12,7 @@
         }
 
         :root {
+            /* Dark mode (default) */
             --bg-dark: #1e1e1e;
             --bg-panel: #252526;
             --bg-input: #3c3c3c;
@@ -20,6 +21,22 @@
             --accent: #0078d4;
             --border: #3c3c3c;
             --selected: rgba(0, 120, 212, 0.3);
+            --canvas-bg: #2d2d2d;
+            --shadow: rgba(0, 0, 0, 0.3);
+        }
+
+        /* Light mode theme */
+        [data-theme="light"] {
+            --bg-dark: #f5f5f5;
+            --bg-panel: #ffffff;
+            --bg-input: #e8e8e8;
+            --text-primary: #1a1a1a;
+            --text-secondary: #666666;
+            --accent: #0078d4;
+            --border: #d4d4d4;
+            --selected: rgba(0, 120, 212, 0.15);
+            --canvas-bg: #e0e0e0;
+            --shadow: rgba(0, 0, 0, 0.1);
         }
 
         body {
@@ -91,6 +108,10 @@
             background: #4a4a4a;
         }
 
+        [data-theme="light"] .btn:hover {
+            background: #d0d0d0;
+        }
+
         .btn:disabled {
             opacity: 0.5;
             cursor: not-allowed;
@@ -125,7 +146,7 @@
             border: 1px solid var(--border);
             border-radius: 4px;
             min-width: 160px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px var(--shadow);
             z-index: 100;
             display: none;
             max-height: 400px;
@@ -303,7 +324,7 @@
 
         /* Canvas Area */
         .canvas-area {
-            background: #2d2d2d;
+            background: var(--canvas-bg);
             overflow: hidden;
             position: relative;
         }
@@ -335,7 +356,7 @@
 
         .canvas-wrapper {
             background: white;
-            box-shadow: 0 4px 20px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 20px var(--shadow);
             position: relative;
         }
 
@@ -525,6 +546,72 @@
             font-size: 11px;
         }
 
+        /* Context Menu */
+        .context-menu {
+            position: fixed;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 8px;
+            padding: 4px 0;
+            min-width: 180px;
+            box-shadow: 0 8px 24px rgba(0,0,0,0.4);
+            z-index: 10000;
+            display: none;
+        }
+
+        .context-menu.visible {
+            display: block;
+            animation: context-menu-in 0.15s ease;
+        }
+
+        @keyframes context-menu-in {
+            from { opacity: 0; transform: scale(0.95); }
+            to { opacity: 1; transform: scale(1); }
+        }
+
+        .context-menu-item {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 8px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            color: var(--text);
+            transition: background 0.1s;
+        }
+
+        .context-menu-item:hover {
+            background: var(--selected);
+        }
+
+        .context-menu-item.disabled {
+            opacity: 0.4;
+            pointer-events: none;
+        }
+
+        .context-menu-item-icon {
+            width: 20px;
+            text-align: center;
+            margin-right: 8px;
+            font-size: 14px;
+        }
+
+        .context-menu-item-label {
+            flex: 1;
+        }
+
+        .context-menu-item-shortcut {
+            font-size: 11px;
+            color: var(--text-secondary);
+            margin-left: 16px;
+        }
+
+        .context-menu-divider {
+            height: 1px;
+            background: var(--border);
+            margin: 4px 0;
+        }
+
         /* Toast Notifications */
         .toast-container {
             position: fixed;
@@ -547,7 +634,7 @@
             align-items: flex-start;
             gap: 12px;
             max-width: 400px;
-            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            box-shadow: 0 4px 12px var(--shadow);
             animation: toast-in 0.3s ease;
             pointer-events: auto;
         }
@@ -778,6 +865,9 @@
             </div>
 
             <div class="toolbar-section" style="margin-left: auto;">
+                <button class="btn btn-icon" id="btn-theme" title="Toggle Dark/Light Mode">
+                    <span id="theme-icon">☀️</span>
+                </button>
                 <button class="btn btn-primary" id="btn-export" disabled title="Download modified HTML">
                     <span>Export HTML</span>
                 </button>
@@ -967,6 +1057,45 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Context Menu -->
+    <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" data-action="edit-text">
+            <span class="context-menu-item-icon">✏️</span>
+            <span class="context-menu-item-label">Edit Text</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="duplicate">
+            <span class="context-menu-item-icon">📋</span>
+            <span class="context-menu-item-label">Duplicate</span>
+            <span class="context-menu-item-shortcut">Ctrl+D</span>
+        </div>
+        <div class="context-menu-item" data-action="copy">
+            <span class="context-menu-item-icon">📄</span>
+            <span class="context-menu-item-label">Copy</span>
+            <span class="context-menu-item-shortcut">Ctrl+C</span>
+        </div>
+        <div class="context-menu-item" data-action="paste">
+            <span class="context-menu-item-icon">📥</span>
+            <span class="context-menu-item-label">Paste</span>
+            <span class="context-menu-item-shortcut">Ctrl+V</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="move-up">
+            <span class="context-menu-item-icon">⬆️</span>
+            <span class="context-menu-item-label">Move Up</span>
+        </div>
+        <div class="context-menu-item" data-action="move-down">
+            <span class="context-menu-item-icon">⬇️</span>
+            <span class="context-menu-item-label">Move Down</span>
+        </div>
+        <div class="context-menu-divider"></div>
+        <div class="context-menu-item" data-action="delete">
+            <span class="context-menu-item-icon">🗑️</span>
+            <span class="context-menu-item-label">Delete</span>
+            <span class="context-menu-item-shortcut">Del</span>
+        </div>
+    </div>
+
     <script>
     (function() {
         'use strict';
@@ -1027,6 +1156,8 @@
             btnUndo: document.getElementById('btn-undo'),
             btnRedo: document.getElementById('btn-redo'),
             btnExport: document.getElementById('btn-export'),
+            btnTheme: document.getElementById('btn-theme'),
+            themeIcon: document.getElementById('theme-icon'),
             btnZoomIn: document.getElementById('btn-zoom-in'),
             btnZoomOut: document.getElementById('btn-zoom-out'),
             btnFit: document.getElementById('btn-fit'),
@@ -1061,7 +1192,8 @@
             propWidth: document.getElementById('prop-width'),
             propHeight: document.getElementById('prop-height'),
             textContentRow: document.getElementById('text-content-row'),
-            toastContainer: document.getElementById('toast-container')
+            toastContainer: document.getElementById('toast-container'),
+            contextMenu: document.getElementById('context-menu')
         };
 
         // =========================================================================
@@ -1097,6 +1229,30 @@
             });
         }
 
+        // =========================================================================
+        // Theme Management
+        // =========================================================================
+
+        function initTheme() {
+            const savedTheme = localStorage.getItem('html-editor-theme') || 'dark';
+            setTheme(savedTheme);
+        }
+
+        function setTheme(theme) {
+            if (theme === 'light') {
+                document.documentElement.setAttribute('data-theme', 'light');
+                elements.themeIcon.textContent = '🌙';
+            } else {
+                document.documentElement.removeAttribute('data-theme');
+                elements.themeIcon.textContent = '☀️';
+            }
+            localStorage.setItem('html-editor-theme', theme);
+        }
+
+        function toggleTheme() {
+            const currentTheme = document.documentElement.getAttribute('data-theme');
+            setTheme(currentTheme === 'light' ? 'dark' : 'light');
+        }
 
         // =========================================================================
         // Toast Notifications
@@ -2674,6 +2830,10 @@
 
         elements.propWidth.addEventListener('change', (e) => applyProperty('width', e.target.value));
         elements.propHeight.addEventListener('change', (e) => applyProperty('height', e.target.value));
+
+        // Initialize theme
+        initTheme();
+        elements.btnTheme.addEventListener('click', toggleTheme);
 
         // Initialize transform
         updateTransform();
