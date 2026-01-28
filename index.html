@@ -1119,6 +1119,181 @@
             opacity: 0.9;
         }
 
+        /* === SPACING OVERLAY === */
+        .spacing-overlay {
+            position: absolute;
+            pointer-events: none;
+            z-index: 999;
+            display: none;
+        }
+
+        .spacing-overlay.active {
+            display: block;
+        }
+
+        /* Margin visualization (orange) */
+        .spacing-margin {
+            position: absolute;
+            background: rgba(249, 115, 22, 0.25);
+            border: 1px dashed rgba(249, 115, 22, 0.6);
+        }
+
+        .spacing-margin-top { top: 0; left: 0; right: 0; }
+        .spacing-margin-right { top: 0; right: 0; bottom: 0; }
+        .spacing-margin-bottom { bottom: 0; left: 0; right: 0; }
+        .spacing-margin-left { top: 0; left: 0; bottom: 0; }
+
+        /* Padding visualization (green) */
+        .spacing-padding {
+            position: absolute;
+            background: rgba(34, 197, 94, 0.25);
+            border: 1px dashed rgba(34, 197, 94, 0.6);
+        }
+
+        .spacing-padding-top { top: 0; left: 0; right: 0; }
+        .spacing-padding-right { top: 0; right: 0; bottom: 0; }
+        .spacing-padding-bottom { bottom: 0; left: 0; right: 0; }
+        .spacing-padding-left { top: 0; left: 0; bottom: 0; }
+
+        /* Content box (center area) */
+        .spacing-content {
+            position: absolute;
+            background: rgba(59, 130, 246, 0.1);
+            border: 1px solid rgba(59, 130, 246, 0.4);
+        }
+
+        /* Spacing labels */
+        .spacing-label {
+            position: absolute;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            font-weight: 600;
+            padding: 1px 4px;
+            border-radius: 2px;
+            pointer-events: none;
+            white-space: nowrap;
+            z-index: 10;
+        }
+
+        .spacing-label.margin-label {
+            background: rgba(249, 115, 22, 0.9);
+            color: white;
+        }
+
+        .spacing-label.padding-label {
+            background: rgba(34, 197, 94, 0.9);
+            color: white;
+        }
+
+        .spacing-label.top { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .spacing-label.right { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .spacing-label.bottom { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+        .spacing-label.left { top: 50%; left: 50%; transform: translate(-50%, -50%); }
+
+        /* Draggable edges */
+        .spacing-edge {
+            position: absolute;
+            pointer-events: all;
+            z-index: 20;
+            transition: background var(--transition-fast);
+        }
+
+        .spacing-edge:hover {
+            background: rgba(255, 255, 255, 0.15);
+        }
+
+        .spacing-edge.active {
+            background: rgba(255, 255, 255, 0.25);
+        }
+
+        .spacing-edge.horizontal {
+            height: 8px;
+            cursor: ns-resize;
+            left: 0;
+            right: 0;
+        }
+
+        .spacing-edge.vertical {
+            width: 8px;
+            cursor: ew-resize;
+            top: 0;
+            bottom: 0;
+        }
+
+        .spacing-edge.margin-top { top: -4px; }
+        .spacing-edge.margin-bottom { bottom: -4px; }
+        .spacing-edge.margin-left { left: -4px; }
+        .spacing-edge.margin-right { right: -4px; }
+
+        .spacing-edge.padding-top { top: 0; }
+        .spacing-edge.padding-bottom { bottom: 0; }
+        .spacing-edge.padding-left { left: 0; }
+        .spacing-edge.padding-right { right: 0; }
+
+        /* Spacing presets bar */
+        .spacing-presets {
+            position: absolute;
+            bottom: -40px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 4px;
+            background: var(--gray-900);
+            padding: 4px;
+            border-radius: var(--radius-md);
+            box-shadow: var(--shadow-lg);
+            opacity: 0;
+            pointer-events: none;
+            transition: opacity var(--transition-fast);
+        }
+
+        .spacing-overlay.editing .spacing-presets {
+            opacity: 1;
+            pointer-events: all;
+        }
+
+        .spacing-preset {
+            padding: 4px 8px;
+            font-size: 10px;
+            font-family: var(--font-mono);
+            font-weight: 500;
+            color: var(--text-secondary);
+            background: var(--bg-muted);
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .spacing-preset:hover {
+            background: var(--accent-muted);
+            color: var(--accent);
+        }
+
+        .spacing-preset.active {
+            background: var(--accent);
+            color: white;
+        }
+
+        /* Spacing value display while dragging */
+        .spacing-drag-value {
+            position: fixed;
+            background: var(--gray-900);
+            color: white;
+            font-size: 11px;
+            font-family: var(--font-mono);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            box-shadow: var(--shadow-md);
+            pointer-events: none;
+            z-index: 10000;
+            display: none;
+        }
+
+        .spacing-drag-value.visible {
+            display: block;
+        }
+
         /* === WELCOME SCREEN === */
         .welcome-screen {
             position: absolute;
@@ -1870,6 +2045,54 @@
                                     <div class="position-hint" id="position-hint">Set position to move freely</div>
                                 </div>
                             </div>
+                            <!-- Spacing Overlay -->
+                            <div class="spacing-overlay" id="spacing-overlay">
+                                <!-- Margin boxes (orange) -->
+                                <div class="spacing-margin spacing-margin-top" id="spacing-margin-top">
+                                    <span class="spacing-label margin-label top" id="margin-top-label">0</span>
+                                </div>
+                                <div class="spacing-margin spacing-margin-right" id="spacing-margin-right">
+                                    <span class="spacing-label margin-label right" id="margin-right-label">0</span>
+                                </div>
+                                <div class="spacing-margin spacing-margin-bottom" id="spacing-margin-bottom">
+                                    <span class="spacing-label margin-label bottom" id="margin-bottom-label">0</span>
+                                </div>
+                                <div class="spacing-margin spacing-margin-left" id="spacing-margin-left">
+                                    <span class="spacing-label margin-label left" id="margin-left-label">0</span>
+                                </div>
+                                <!-- Padding boxes (green) -->
+                                <div class="spacing-padding spacing-padding-top" id="spacing-padding-top">
+                                    <span class="spacing-label padding-label top" id="padding-top-label">0</span>
+                                </div>
+                                <div class="spacing-padding spacing-padding-right" id="spacing-padding-right">
+                                    <span class="spacing-label padding-label right" id="padding-right-label">0</span>
+                                </div>
+                                <div class="spacing-padding spacing-padding-bottom" id="spacing-padding-bottom">
+                                    <span class="spacing-label padding-label bottom" id="padding-bottom-label">0</span>
+                                </div>
+                                <div class="spacing-padding spacing-padding-left" id="spacing-padding-left">
+                                    <span class="spacing-label padding-label left" id="padding-left-label">0</span>
+                                </div>
+                                <!-- Content area (blue) -->
+                                <div class="spacing-content" id="spacing-content"></div>
+                                <!-- Draggable edges -->
+                                <div class="spacing-edge horizontal margin-top" data-type="margin" data-side="top"></div>
+                                <div class="spacing-edge vertical margin-right" data-type="margin" data-side="right"></div>
+                                <div class="spacing-edge horizontal margin-bottom" data-type="margin" data-side="bottom"></div>
+                                <div class="spacing-edge vertical margin-left" data-type="margin" data-side="left"></div>
+                                <div class="spacing-edge horizontal padding-top" data-type="padding" data-side="top"></div>
+                                <div class="spacing-edge vertical padding-right" data-type="padding" data-side="right"></div>
+                                <div class="spacing-edge horizontal padding-bottom" data-type="padding" data-side="bottom"></div>
+                                <div class="spacing-edge vertical padding-left" data-type="padding" data-side="left"></div>
+                                <!-- Presets bar -->
+                                <div class="spacing-presets" id="spacing-presets">
+                                    <button class="spacing-preset" data-value="0">0</button>
+                                    <button class="spacing-preset" data-value="8">8</button>
+                                    <button class="spacing-preset" data-value="16">16</button>
+                                    <button class="spacing-preset" data-value="24">24</button>
+                                    <button class="spacing-preset" data-value="32">32</button>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1995,6 +2218,9 @@
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
 
+    <!-- Spacing Drag Value Display -->
+    <div class="spacing-drag-value" id="spacing-drag-value">0px</div>
+
     <!-- Context Menu -->
     <div class="context-menu" id="context-menu">
         <div class="context-menu-item" data-action="edit-text">
@@ -2106,7 +2332,15 @@
             resizeStartTop: 0,
             resizeAspectRatio: 1,
             resizeShiftKey: false,
-            elementConstraints: null
+            elementConstraints: null,
+            // Spacing drag state
+            isSpacingDrag: false,
+            spacingDragType: null, // 'margin' or 'padding'
+            spacingDragSide: null, // 'top', 'right', 'bottom', 'left'
+            spacingDragStartY: 0,
+            spacingDragStartX: 0,
+            spacingDragStartValue: 0,
+            spacingShiftKey: false
         };
 
         // =========================================================================
@@ -2179,7 +2413,28 @@
             resizeBox: document.getElementById('resize-box'),
             resizeDimensions: document.getElementById('resize-dimensions'),
             constraintTooltip: document.getElementById('constraint-tooltip'),
-            positionHint: document.getElementById('position-hint')
+            positionHint: document.getElementById('position-hint'),
+            // Spacing overlay elements
+            spacingOverlay: document.getElementById('spacing-overlay'),
+            spacingMarginTop: document.getElementById('spacing-margin-top'),
+            spacingMarginRight: document.getElementById('spacing-margin-right'),
+            spacingMarginBottom: document.getElementById('spacing-margin-bottom'),
+            spacingMarginLeft: document.getElementById('spacing-margin-left'),
+            spacingPaddingTop: document.getElementById('spacing-padding-top'),
+            spacingPaddingRight: document.getElementById('spacing-padding-right'),
+            spacingPaddingBottom: document.getElementById('spacing-padding-bottom'),
+            spacingPaddingLeft: document.getElementById('spacing-padding-left'),
+            spacingContent: document.getElementById('spacing-content'),
+            spacingPresets: document.getElementById('spacing-presets'),
+            spacingDragValue: document.getElementById('spacing-drag-value'),
+            marginTopLabel: document.getElementById('margin-top-label'),
+            marginRightLabel: document.getElementById('margin-right-label'),
+            marginBottomLabel: document.getElementById('margin-bottom-label'),
+            marginLeftLabel: document.getElementById('margin-left-label'),
+            paddingTopLabel: document.getElementById('padding-top-label'),
+            paddingRightLabel: document.getElementById('padding-right-label'),
+            paddingBottomLabel: document.getElementById('padding-bottom-label'),
+            paddingLeftLabel: document.getElementById('padding-left-label')
         };
 
         // =========================================================================
@@ -2841,6 +3096,7 @@
 
             // Update resize overlay position after zoom/pan
             requestAnimationFrame(updateResizeOverlay);
+            requestAnimationFrame(updateSpacingOverlay);
         }
 
         function zoomTo(newZoom, centerX, centerY) {
@@ -3844,6 +4100,9 @@
 
             // Hide resize overlay
             elements.resizeOverlay.classList.remove('active');
+
+            // Hide spacing overlay
+            elements.spacingOverlay.classList.remove('active');
         }
 
         // =========================================================================
@@ -4109,6 +4368,9 @@
 
             // Update resize overlay
             updateResizeOverlay();
+
+            // Update spacing overlay
+            updateSpacingOverlay();
         }
 
         function rgbToHex(rgb) {
@@ -4486,6 +4748,374 @@
         }
 
         // =========================================================================
+        // Visual Spacing Editor
+        // =========================================================================
+
+        function parseSpacingValue(value) {
+            if (!value || value === 'auto') return 0;
+            const num = parseFloat(value);
+            return isNaN(num) ? 0 : num;
+        }
+
+        function updateSpacingOverlay() {
+            if (!state.selectedElement || state.previewMode || state.selectedElements.length > 1) {
+                elements.spacingOverlay.classList.remove('active');
+                return;
+            }
+
+            const element = state.selectedElement;
+            const doc = element.ownerDocument;
+            const computed = doc.defaultView.getComputedStyle(element);
+
+            const frameRect = elements.previewFrame.getBoundingClientRect();
+            const canvasRect = elements.canvasWrapper.getBoundingClientRect();
+            const elementRect = element.getBoundingClientRect();
+
+            // Get spacing values
+            const margin = {
+                top: parseSpacingValue(computed.marginTop),
+                right: parseSpacingValue(computed.marginRight),
+                bottom: parseSpacingValue(computed.marginBottom),
+                left: parseSpacingValue(computed.marginLeft)
+            };
+
+            const padding = {
+                top: parseSpacingValue(computed.paddingTop),
+                right: parseSpacingValue(computed.paddingRight),
+                bottom: parseSpacingValue(computed.paddingBottom),
+                left: parseSpacingValue(computed.paddingLeft)
+            };
+
+            // Calculate position relative to canvas wrapper (including zoom)
+            const zoom = state.zoom;
+            const baseLeft = (elementRect.left - frameRect.left) * zoom + (frameRect.left - canvasRect.left);
+            const baseTop = (elementRect.top - frameRect.top) * zoom + (frameRect.top - canvasRect.top);
+            const width = elementRect.width * zoom;
+            const height = elementRect.height * zoom;
+
+            // Scale margins
+            const scaledMargin = {
+                top: margin.top * zoom,
+                right: margin.right * zoom,
+                bottom: margin.bottom * zoom,
+                left: margin.left * zoom
+            };
+
+            const scaledPadding = {
+                top: padding.top * zoom,
+                right: padding.right * zoom,
+                bottom: padding.bottom * zoom,
+                left: padding.left * zoom
+            };
+
+            // Position the overlay to include margins
+            elements.spacingOverlay.style.left = (baseLeft - scaledMargin.left) + 'px';
+            elements.spacingOverlay.style.top = (baseTop - scaledMargin.top) + 'px';
+            elements.spacingOverlay.style.width = (width + scaledMargin.left + scaledMargin.right) + 'px';
+            elements.spacingOverlay.style.height = (height + scaledMargin.top + scaledMargin.bottom) + 'px';
+
+            // Position margin boxes
+            elements.spacingMarginTop.style.height = scaledMargin.top + 'px';
+            elements.spacingMarginTop.style.left = scaledMargin.left + 'px';
+            elements.spacingMarginTop.style.right = scaledMargin.right + 'px';
+            elements.spacingMarginTop.style.display = scaledMargin.top > 0 ? 'block' : 'none';
+
+            elements.spacingMarginRight.style.width = scaledMargin.right + 'px';
+            elements.spacingMarginRight.style.top = scaledMargin.top + 'px';
+            elements.spacingMarginRight.style.bottom = scaledMargin.bottom + 'px';
+            elements.spacingMarginRight.style.display = scaledMargin.right > 0 ? 'block' : 'none';
+
+            elements.spacingMarginBottom.style.height = scaledMargin.bottom + 'px';
+            elements.spacingMarginBottom.style.left = scaledMargin.left + 'px';
+            elements.spacingMarginBottom.style.right = scaledMargin.right + 'px';
+            elements.spacingMarginBottom.style.display = scaledMargin.bottom > 0 ? 'block' : 'none';
+
+            elements.spacingMarginLeft.style.width = scaledMargin.left + 'px';
+            elements.spacingMarginLeft.style.top = scaledMargin.top + 'px';
+            elements.spacingMarginLeft.style.bottom = scaledMargin.bottom + 'px';
+            elements.spacingMarginLeft.style.display = scaledMargin.left > 0 ? 'block' : 'none';
+
+            // Position padding boxes (inside the element)
+            const paddingLeft = scaledMargin.left;
+            const paddingTop = scaledMargin.top;
+
+            elements.spacingPaddingTop.style.left = paddingLeft + 'px';
+            elements.spacingPaddingTop.style.right = scaledMargin.right + 'px';
+            elements.spacingPaddingTop.style.top = paddingTop + 'px';
+            elements.spacingPaddingTop.style.height = scaledPadding.top + 'px';
+            elements.spacingPaddingTop.style.display = scaledPadding.top > 0 ? 'block' : 'none';
+
+            elements.spacingPaddingRight.style.right = scaledMargin.right + 'px';
+            elements.spacingPaddingRight.style.top = paddingTop + scaledPadding.top + 'px';
+            elements.spacingPaddingRight.style.bottom = scaledMargin.bottom + scaledPadding.bottom + 'px';
+            elements.spacingPaddingRight.style.width = scaledPadding.right + 'px';
+            elements.spacingPaddingRight.style.display = scaledPadding.right > 0 ? 'block' : 'none';
+
+            elements.spacingPaddingBottom.style.left = paddingLeft + 'px';
+            elements.spacingPaddingBottom.style.right = scaledMargin.right + 'px';
+            elements.spacingPaddingBottom.style.bottom = scaledMargin.bottom + 'px';
+            elements.spacingPaddingBottom.style.height = scaledPadding.bottom + 'px';
+            elements.spacingPaddingBottom.style.display = scaledPadding.bottom > 0 ? 'block' : 'none';
+
+            elements.spacingPaddingLeft.style.left = paddingLeft + 'px';
+            elements.spacingPaddingLeft.style.top = paddingTop + scaledPadding.top + 'px';
+            elements.spacingPaddingLeft.style.bottom = scaledMargin.bottom + scaledPadding.bottom + 'px';
+            elements.spacingPaddingLeft.style.width = scaledPadding.left + 'px';
+            elements.spacingPaddingLeft.style.display = scaledPadding.left > 0 ? 'block' : 'none';
+
+            // Position content box
+            elements.spacingContent.style.left = (scaledMargin.left + scaledPadding.left) + 'px';
+            elements.spacingContent.style.top = (scaledMargin.top + scaledPadding.top) + 'px';
+            elements.spacingContent.style.right = (scaledMargin.right + scaledPadding.right) + 'px';
+            elements.spacingContent.style.bottom = (scaledMargin.bottom + scaledPadding.bottom) + 'px';
+
+            // Update labels
+            elements.marginTopLabel.textContent = Math.round(margin.top);
+            elements.marginRightLabel.textContent = Math.round(margin.right);
+            elements.marginBottomLabel.textContent = Math.round(margin.bottom);
+            elements.marginLeftLabel.textContent = Math.round(margin.left);
+
+            elements.paddingTopLabel.textContent = Math.round(padding.top);
+            elements.paddingRightLabel.textContent = Math.round(padding.right);
+            elements.paddingBottomLabel.textContent = Math.round(padding.bottom);
+            elements.paddingLeftLabel.textContent = Math.round(padding.left);
+
+            // Hide labels for zero values
+            elements.marginTopLabel.style.display = margin.top > 0 ? 'block' : 'none';
+            elements.marginRightLabel.style.display = margin.right > 0 ? 'block' : 'none';
+            elements.marginBottomLabel.style.display = margin.bottom > 0 ? 'block' : 'none';
+            elements.marginLeftLabel.style.display = margin.left > 0 ? 'block' : 'none';
+
+            elements.paddingTopLabel.style.display = padding.top > 0 ? 'block' : 'none';
+            elements.paddingRightLabel.style.display = padding.right > 0 ? 'block' : 'none';
+            elements.paddingBottomLabel.style.display = padding.bottom > 0 ? 'block' : 'none';
+            elements.paddingLeftLabel.style.display = padding.left > 0 ? 'block' : 'none';
+
+            // Position draggable edges
+            const edges = elements.spacingOverlay.querySelectorAll('.spacing-edge');
+            edges.forEach(edge => {
+                const type = edge.dataset.type;
+                const side = edge.dataset.side;
+
+                if (type === 'margin') {
+                    if (side === 'top') {
+                        edge.style.top = '0';
+                        edge.style.left = scaledMargin.left + 'px';
+                        edge.style.right = scaledMargin.right + 'px';
+                    } else if (side === 'bottom') {
+                        edge.style.bottom = '0';
+                        edge.style.left = scaledMargin.left + 'px';
+                        edge.style.right = scaledMargin.right + 'px';
+                    } else if (side === 'left') {
+                        edge.style.left = '0';
+                        edge.style.top = scaledMargin.top + 'px';
+                        edge.style.bottom = scaledMargin.bottom + 'px';
+                    } else if (side === 'right') {
+                        edge.style.right = '0';
+                        edge.style.top = scaledMargin.top + 'px';
+                        edge.style.bottom = scaledMargin.bottom + 'px';
+                    }
+                } else if (type === 'padding') {
+                    if (side === 'top') {
+                        edge.style.top = scaledMargin.top + 'px';
+                        edge.style.left = (scaledMargin.left + scaledPadding.left) + 'px';
+                        edge.style.right = (scaledMargin.right + scaledPadding.right) + 'px';
+                    } else if (side === 'bottom') {
+                        edge.style.bottom = scaledMargin.bottom + 'px';
+                        edge.style.left = (scaledMargin.left + scaledPadding.left) + 'px';
+                        edge.style.right = (scaledMargin.right + scaledPadding.right) + 'px';
+                    } else if (side === 'left') {
+                        edge.style.left = scaledMargin.left + 'px';
+                        edge.style.top = (scaledMargin.top + scaledPadding.top) + 'px';
+                        edge.style.bottom = (scaledMargin.bottom + scaledPadding.bottom) + 'px';
+                    } else if (side === 'right') {
+                        edge.style.right = scaledMargin.right + 'px';
+                        edge.style.top = (scaledMargin.top + scaledPadding.top) + 'px';
+                        edge.style.bottom = (scaledMargin.bottom + scaledPadding.bottom) + 'px';
+                    }
+                }
+            });
+
+            elements.spacingOverlay.classList.add('active');
+        }
+
+        function startSpacingDrag(e, type, side) {
+            if (!state.selectedElement) return;
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const element = state.selectedElement;
+            const computed = element.ownerDocument.defaultView.getComputedStyle(element);
+
+            // Get current value
+            const propName = type + side.charAt(0).toUpperCase() + side.slice(1);
+            const currentValue = parseSpacingValue(computed[propName]);
+
+            state.isSpacingDrag = true;
+            state.spacingDragType = type;
+            state.spacingDragSide = side;
+            state.spacingDragStartX = e.clientX;
+            state.spacingDragStartY = e.clientY;
+            state.spacingDragStartValue = currentValue;
+            state.spacingShiftKey = e.shiftKey;
+
+            // Add active class to edge
+            const edge = e.target;
+            edge.classList.add('active');
+
+            // Show editing state
+            elements.spacingOverlay.classList.add('editing');
+
+            // Show drag value
+            elements.spacingDragValue.classList.add('visible');
+            elements.spacingDragValue.textContent = Math.round(currentValue) + 'px';
+            elements.spacingDragValue.style.left = (e.clientX + 15) + 'px';
+            elements.spacingDragValue.style.top = (e.clientY - 10) + 'px';
+
+            document.body.style.cursor = side === 'top' || side === 'bottom' ? 'ns-resize' : 'ew-resize';
+
+            saveState();
+        }
+
+        function doSpacingDrag(e) {
+            if (!state.isSpacingDrag || !state.selectedElement) return;
+
+            const element = state.selectedElement;
+            const side = state.spacingDragSide;
+            const type = state.spacingDragType;
+
+            // Calculate delta based on side
+            let delta;
+            if (side === 'top') {
+                delta = (state.spacingDragStartY - e.clientY) / state.zoom;
+            } else if (side === 'bottom') {
+                delta = (e.clientY - state.spacingDragStartY) / state.zoom;
+            } else if (side === 'left') {
+                delta = (state.spacingDragStartX - e.clientX) / state.zoom;
+            } else if (side === 'right') {
+                delta = (e.clientX - state.spacingDragStartX) / state.zoom;
+            }
+
+            // Calculate new value (minimum 0)
+            let newValue = Math.max(0, Math.round(state.spacingDragStartValue + delta));
+
+            // Snap to grid (8px)
+            if (!e.altKey) {
+                newValue = Math.round(newValue / 4) * 4;
+            }
+
+            // Get property name
+            const propName = type + side.charAt(0).toUpperCase() + side.slice(1);
+
+            // Apply to element
+            element.style[propName] = newValue + 'px';
+
+            // If shift is held, apply to opposite side too (symmetric)
+            if (e.shiftKey) {
+                const oppositeSide = {
+                    top: 'bottom',
+                    bottom: 'top',
+                    left: 'right',
+                    right: 'left'
+                }[side];
+                const oppositeProp = type + oppositeSide.charAt(0).toUpperCase() + oppositeSide.slice(1);
+                element.style[oppositeProp] = newValue + 'px';
+            }
+
+            // Update drag value display
+            elements.spacingDragValue.textContent = newValue + 'px';
+            elements.spacingDragValue.style.left = (e.clientX + 15) + 'px';
+            elements.spacingDragValue.style.top = (e.clientY - 10) + 'px';
+
+            // Update overlays
+            updateSpacingOverlay();
+            updateResizeOverlay();
+        }
+
+        function endSpacingDrag() {
+            if (!state.isSpacingDrag) return;
+
+            state.isSpacingDrag = false;
+            state.spacingDragType = null;
+            state.spacingDragSide = null;
+
+            // Remove active class from all edges
+            elements.spacingOverlay.querySelectorAll('.spacing-edge.active').forEach(edge => {
+                edge.classList.remove('active');
+            });
+
+            // Hide editing state
+            elements.spacingOverlay.classList.remove('editing');
+
+            // Hide drag value
+            elements.spacingDragValue.classList.remove('visible');
+
+            document.body.style.cursor = '';
+
+            // Refresh properties panel
+            if (state.selectedElement) {
+                showProperties(state.selectedElement);
+            }
+        }
+
+        function applySpacingPreset(value, type, side) {
+            if (!state.selectedElement) return;
+
+            saveState();
+
+            const element = state.selectedElement;
+
+            if (type && side) {
+                // Apply to specific side
+                const propName = type + side.charAt(0).toUpperCase() + side.slice(1);
+                element.style[propName] = value + 'px';
+            } else if (state.spacingDragType && state.spacingDragSide) {
+                // Apply to last dragged side
+                const propName = state.spacingDragType + state.spacingDragSide.charAt(0).toUpperCase() + state.spacingDragSide.slice(1);
+                element.style[propName] = value + 'px';
+            }
+
+            updateSpacingOverlay();
+            updateResizeOverlay();
+            showProperties(element);
+        }
+
+        function initSpacingOverlay() {
+            // Handle edge drag start
+            const edges = elements.spacingOverlay.querySelectorAll('.spacing-edge');
+            edges.forEach(edge => {
+                edge.addEventListener('mousedown', (e) => {
+                    startSpacingDrag(e, edge.dataset.type, edge.dataset.side);
+                });
+            });
+
+            // Handle preset clicks
+            elements.spacingPresets.querySelectorAll('.spacing-preset').forEach(preset => {
+                preset.addEventListener('click', (e) => {
+                    e.stopPropagation();
+                    const value = parseInt(preset.dataset.value);
+                    applySpacingPreset(value);
+                });
+            });
+
+            // Global mouse move/up for spacing drag
+            document.addEventListener('mousemove', (e) => {
+                if (state.isSpacingDrag) {
+                    doSpacingDrag(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                endSpacingDrag();
+            });
+
+            // Update overlay on scroll/resize
+            elements.canvasViewport.addEventListener('scroll', updateSpacingOverlay);
+            window.addEventListener('resize', debounce(updateSpacingOverlay, 100));
+        }
+
+        // =========================================================================
         // Event Listeners
         // =========================================================================
 
@@ -4753,6 +5383,9 @@
 
         // Resize overlay
         initResizeOverlay();
+
+        // Spacing overlay
+        initSpacingOverlay();
 
         // Initialize transform
         updateTransform();
