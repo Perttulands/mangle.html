@@ -111,6 +111,69 @@
             justify-content: center;
         }
 
+        /* Dropdown */
+        .dropdown {
+            position: relative;
+        }
+
+        .dropdown-menu {
+            position: absolute;
+            top: 100%;
+            left: 0;
+            margin-top: 4px;
+            background: var(--bg-panel);
+            border: 1px solid var(--border);
+            border-radius: 4px;
+            min-width: 160px;
+            box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+            z-index: 100;
+            display: none;
+            max-height: 400px;
+            overflow-y: auto;
+        }
+
+        .dropdown-menu.open {
+            display: block;
+        }
+
+        .dropdown-section {
+            padding: 4px 0;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .dropdown-section:last-child {
+            border-bottom: none;
+        }
+
+        .dropdown-section-title {
+            padding: 4px 12px;
+            font-size: 10px;
+            font-weight: 600;
+            text-transform: uppercase;
+            color: var(--text-secondary);
+        }
+
+        .dropdown-item {
+            padding: 6px 12px;
+            cursor: pointer;
+            font-size: 13px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            transition: background 0.1s;
+        }
+
+        .dropdown-item:hover {
+            background: var(--bg-input);
+        }
+
+        .dropdown-item-icon {
+            width: 20px;
+            text-align: center;
+            color: var(--text-secondary);
+            font-size: 12px;
+        }
+
         /* Zoom Controls */
         .zoom-controls {
             display: flex;
@@ -388,6 +451,51 @@
             </div>
 
             <div class="toolbar-section">
+                <div class="dropdown" id="insert-dropdown">
+                    <button class="btn" id="btn-insert" disabled>
+                        <span>+ Insert</span>
+                    </button>
+                    <div class="dropdown-menu" id="insert-menu">
+                        <div class="dropdown-section">
+                            <div class="dropdown-section-title">Layout</div>
+                            <div class="dropdown-item" data-tag="div"><span class="dropdown-item-icon">▢</span>div</div>
+                            <div class="dropdown-item" data-tag="section"><span class="dropdown-item-icon">§</span>section</div>
+                            <div class="dropdown-item" data-tag="header"><span class="dropdown-item-icon">▤</span>header</div>
+                            <div class="dropdown-item" data-tag="footer"><span class="dropdown-item-icon">▥</span>footer</div>
+                            <div class="dropdown-item" data-tag="nav"><span class="dropdown-item-icon">☰</span>nav</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-section-title">Text</div>
+                            <div class="dropdown-item" data-tag="p"><span class="dropdown-item-icon">¶</span>p</div>
+                            <div class="dropdown-item" data-tag="span"><span class="dropdown-item-icon">⊡</span>span</div>
+                            <div class="dropdown-item" data-tag="h1"><span class="dropdown-item-icon">H1</span>h1</div>
+                            <div class="dropdown-item" data-tag="h2"><span class="dropdown-item-icon">H2</span>h2</div>
+                            <div class="dropdown-item" data-tag="h3"><span class="dropdown-item-icon">H3</span>h3</div>
+                            <div class="dropdown-item" data-tag="h4"><span class="dropdown-item-icon">H4</span>h4</div>
+                            <div class="dropdown-item" data-tag="h5"><span class="dropdown-item-icon">H5</span>h5</div>
+                            <div class="dropdown-item" data-tag="h6"><span class="dropdown-item-icon">H6</span>h6</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-section-title">Interactive</div>
+                            <div class="dropdown-item" data-tag="button"><span class="dropdown-item-icon">⊞</span>button</div>
+                            <div class="dropdown-item" data-tag="a"><span class="dropdown-item-icon">🔗</span>a (link)</div>
+                            <div class="dropdown-item" data-tag="input"><span class="dropdown-item-icon">⊟</span>input</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-section-title">Media</div>
+                            <div class="dropdown-item" data-tag="img"><span class="dropdown-item-icon">🖼</span>img</div>
+                        </div>
+                        <div class="dropdown-section">
+                            <div class="dropdown-section-title">Lists</div>
+                            <div class="dropdown-item" data-tag="ul"><span class="dropdown-item-icon">•</span>ul (list)</div>
+                            <div class="dropdown-item" data-tag="ol"><span class="dropdown-item-icon">1.</span>ol (numbered)</div>
+                            <div class="dropdown-item" data-tag="li"><span class="dropdown-item-icon">·</span>li (item)</div>
+                        </div>
+                    </div>
+                </div>
+            </div>
+
+            <div class="toolbar-section">
                 <button class="btn" id="btn-undo" disabled title="Undo (Ctrl+Z)">
                     <span>Undo</span>
                 </button>
@@ -583,7 +691,9 @@
             lastMouseY: 0,
             minZoom: 0.1,
             maxZoom: 5,
-            zoomStep: 0.1
+            zoomStep: 0.1,
+            // Document loaded
+            documentLoaded: false
         };
 
         // =========================================================================
@@ -593,6 +703,9 @@
         const elements = {
             fileInput: document.getElementById('file-input'),
             btnOpen: document.getElementById('btn-open'),
+            btnInsert: document.getElementById('btn-insert'),
+            insertDropdown: document.getElementById('insert-dropdown'),
+            insertMenu: document.getElementById('insert-menu'),
             btnUndo: document.getElementById('btn-undo'),
             btnRedo: document.getElementById('btn-redo'),
             btnExport: document.getElementById('btn-export'),
@@ -629,6 +742,97 @@
             propHeight: document.getElementById('prop-height'),
             textContentRow: document.getElementById('text-content-row')
         };
+
+        // =========================================================================
+        // Insert Element System
+        // =========================================================================
+
+        function toggleInsertMenu() {
+            elements.insertMenu.classList.toggle('open');
+        }
+
+        function closeInsertMenu() {
+            elements.insertMenu.classList.remove('open');
+        }
+
+        function insertElement(tagName) {
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+
+            // Create the new element
+            const newElement = doc.createElement(tagName);
+
+            // Add default content/attributes based on tag type
+            const defaults = {
+                'div': { text: '', style: 'padding: 10px; min-height: 20px;' },
+                'p': { text: 'New paragraph' },
+                'span': { text: 'New span' },
+                'h1': { text: 'Heading 1' },
+                'h2': { text: 'Heading 2' },
+                'h3': { text: 'Heading 3' },
+                'h4': { text: 'Heading 4' },
+                'h5': { text: 'Heading 5' },
+                'h6': { text: 'Heading 6' },
+                'button': { text: 'Button' },
+                'a': { text: 'Link', attrs: { href: '#' } },
+                'img': { attrs: { src: 'https://via.placeholder.com/150', alt: 'Image' } },
+                'input': { attrs: { type: 'text', placeholder: 'Enter text...' } },
+                'ul': { children: ['li'] },
+                'ol': { children: ['li'] },
+                'li': { text: 'List item' },
+                'section': { style: 'padding: 20px;' },
+                'header': { style: 'padding: 20px;' },
+                'footer': { style: 'padding: 20px;' },
+                'nav': { style: 'padding: 10px;' }
+            };
+
+            const def = defaults[tagName] || {};
+
+            if (def.text) {
+                newElement.textContent = def.text;
+            }
+
+            if (def.style) {
+                newElement.style.cssText = def.style;
+            }
+
+            if (def.attrs) {
+                for (const [key, value] of Object.entries(def.attrs)) {
+                    newElement.setAttribute(key, value);
+                }
+            }
+
+            // For lists, add a child item
+            if (def.children) {
+                def.children.forEach(childTag => {
+                    const child = doc.createElement(childTag);
+                    child.textContent = 'List item';
+                    newElement.appendChild(child);
+                });
+            }
+
+            // Save state before modification
+            saveState();
+
+            // Insert into DOM
+            let parentElement;
+            if (state.selectedElement && state.selectedElement !== doc.body) {
+                // Insert as child of selected element
+                parentElement = state.selectedElement;
+            } else {
+                // Insert at body
+                parentElement = doc.body;
+            }
+
+            parentElement.appendChild(newElement);
+
+            // Rebuild tree and select new element
+            buildElementTree(doc.body);
+            const newPath = getElementPath(newElement, doc.body);
+            selectElementByPath(newPath);
+
+            closeInsertMenu();
+        }
 
         // =========================================================================
         // Zoom & Pan System
@@ -816,6 +1020,8 @@
                 elements.dropZone.classList.add('hidden');
                 elements.canvasWrapper.classList.remove('hidden');
                 elements.btnExport.disabled = false;
+                elements.btnInsert.disabled = false;
+                state.documentLoaded = true;
 
                 // Reset zoom and center on load
                 state.zoom = 1;
@@ -1458,6 +1664,29 @@
             e.preventDefault();
             elements.dropZone.classList.remove('dragover');
             if (e.dataTransfer.files[0]) handleFile(e.dataTransfer.files[0]);
+        });
+
+        // Insert menu
+        elements.btnInsert.addEventListener('click', (e) => {
+            e.stopPropagation();
+            toggleInsertMenu();
+        });
+
+        elements.insertMenu.addEventListener('click', (e) => {
+            const item = e.target.closest('.dropdown-item');
+            if (item) {
+                const tagName = item.dataset.tag;
+                if (tagName) {
+                    insertElement(tagName);
+                }
+            }
+        });
+
+        // Close dropdown when clicking outside
+        document.addEventListener('click', (e) => {
+            if (!elements.insertDropdown.contains(e.target)) {
+                closeInsertMenu();
+            }
         });
 
         elements.btnUndo.addEventListener('click', undo);
