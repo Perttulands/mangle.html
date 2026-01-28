@@ -105,6 +105,35 @@
             background: #1084d8;
         }
 
+        .btn-icon {
+            padding: 6px 8px;
+            min-width: 32px;
+            justify-content: center;
+        }
+
+        /* Zoom Controls */
+        .zoom-controls {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+
+        .zoom-level {
+            font-size: 12px;
+            color: var(--text-secondary);
+            min-width: 48px;
+            text-align: center;
+            cursor: pointer;
+            padding: 4px 8px;
+            border-radius: 4px;
+            transition: background 0.15s;
+        }
+
+        .zoom-level:hover {
+            background: var(--bg-input);
+            color: var(--text-primary);
+        }
+
         /* Element Tree Sidebar */
         .sidebar-left {
             background: var(--bg-panel);
@@ -185,11 +214,33 @@
         /* Canvas Area */
         .canvas-area {
             background: #2d2d2d;
-            overflow: auto;
+            overflow: hidden;
             position: relative;
-            display: flex;
-            align-items: center;
-            justify-content: center;
+        }
+
+        .canvas-area.panning {
+            cursor: grab;
+        }
+
+        .canvas-area.panning:active {
+            cursor: grabbing;
+        }
+
+        .canvas-viewport {
+            position: absolute;
+            inset: 0;
+            overflow: hidden;
+        }
+
+        .canvas-transform {
+            position: absolute;
+            transform-origin: 0 0;
+            will-change: transform;
+            transition: transform 0.1s ease-out;
+        }
+
+        .canvas-transform.no-transition {
+            transition: none;
         }
 
         .canvas-wrapper {
@@ -345,6 +396,13 @@
                 </button>
             </div>
 
+            <div class="toolbar-section zoom-controls">
+                <button class="btn btn-icon" id="btn-zoom-out" title="Zoom Out (-)">−</button>
+                <span class="zoom-level" id="zoom-level" title="Click to reset to 100%">100%</span>
+                <button class="btn btn-icon" id="btn-zoom-in" title="Zoom In (+)">+</button>
+                <button class="btn" id="btn-fit" title="Fit to Screen (Ctrl+0)">Fit</button>
+            </div>
+
             <div class="toolbar-section" style="margin-left: auto;">
                 <button class="btn btn-primary" id="btn-export" disabled>
                     <span>Export HTML</span>
@@ -367,8 +425,12 @@
                 <div>Drop HTML file here</div>
                 <div style="margin-top: 8px; font-size: 13px;">or click Open to browse</div>
             </div>
-            <div class="canvas-wrapper hidden" id="canvas-wrapper">
-                <iframe id="preview-frame" width="800" height="600"></iframe>
+            <div class="canvas-viewport" id="canvas-viewport">
+                <div class="canvas-transform" id="canvas-transform">
+                    <div class="canvas-wrapper hidden" id="canvas-wrapper">
+                        <iframe id="preview-frame" width="800" height="600"></iframe>
+                    </div>
+                </div>
             </div>
         </main>
 
@@ -505,7 +567,18 @@
             undoStack: [],
             redoStack: [],
             maxUndoSteps: 50,
-            draggedPath: null
+            draggedPath: null,
+            // Zoom & Pan state
+            zoom: 1,
+            panX: 0,
+            panY: 0,
+            isPanning: false,
+            isSpaceDown: false,
+            lastMouseX: 0,
+            lastMouseY: 0,
+            minZoom: 0.1,
+            maxZoom: 5,
+            zoomStep: 0.1
         };
 
         // =========================================================================
@@ -518,7 +591,14 @@
             btnUndo: document.getElementById('btn-undo'),
             btnRedo: document.getElementById('btn-redo'),
             btnExport: document.getElementById('btn-export'),
+            btnZoomIn: document.getElementById('btn-zoom-in'),
+            btnZoomOut: document.getElementById('btn-zoom-out'),
+            btnFit: document.getElementById('btn-fit'),
+            zoomLevel: document.getElementById('zoom-level'),
             dropZone: document.getElementById('drop-zone'),
+            canvasArea: document.getElementById('canvas-area'),
+            canvasViewport: document.getElementById('canvas-viewport'),
+            canvasTransform: document.getElementById('canvas-transform'),
             canvasWrapper: document.getElementById('canvas-wrapper'),
             previewFrame: document.getElementById('preview-frame'),
             elementTree: document.getElementById('element-tree'),
@@ -544,6 +624,130 @@
             propHeight: document.getElementById('prop-height'),
             textContentRow: document.getElementById('text-content-row')
         };
+
+        // =========================================================================
+        // Zoom & Pan System
+        // =========================================================================
+
+        function updateTransform(smooth = true) {
+            if (smooth) {
+                elements.canvasTransform.classList.remove('no-transition');
+            } else {
+                elements.canvasTransform.classList.add('no-transition');
+            }
+            elements.canvasTransform.style.transform =
+                `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
+            elements.zoomLevel.textContent = Math.round(state.zoom * 100) + '%';
+        }
+
+        function zoomTo(newZoom, centerX, centerY) {
+            const oldZoom = state.zoom;
+            newZoom = Math.max(state.minZoom, Math.min(state.maxZoom, newZoom));
+
+            if (newZoom === oldZoom) return;
+
+            // If center point provided, zoom towards that point
+            if (centerX !== undefined && centerY !== undefined) {
+                // Convert viewport coords to canvas coords
+                const canvasX = (centerX - state.panX) / oldZoom;
+                const canvasY = (centerY - state.panY) / oldZoom;
+
+                // After zoom, we want the same canvas point under the cursor
+                state.panX = centerX - canvasX * newZoom;
+                state.panY = centerY - canvasY * newZoom;
+            }
+
+            state.zoom = newZoom;
+            updateTransform();
+        }
+
+        function zoomIn(centerX, centerY) {
+            zoomTo(state.zoom * 1.2, centerX, centerY);
+        }
+
+        function zoomOut(centerX, centerY) {
+            zoomTo(state.zoom / 1.2, centerX, centerY);
+        }
+
+        function resetZoom() {
+            state.zoom = 1;
+            centerCanvas();
+        }
+
+        function fitToScreen() {
+            const viewport = elements.canvasViewport.getBoundingClientRect();
+            const frameWidth = 800;
+            const frameHeight = 600;
+            const padding = 40;
+
+            const scaleX = (viewport.width - padding * 2) / frameWidth;
+            const scaleY = (viewport.height - padding * 2) / frameHeight;
+            const scale = Math.min(scaleX, scaleY, 1);
+
+            state.zoom = scale;
+            centerCanvas();
+        }
+
+        function centerCanvas() {
+            const viewport = elements.canvasViewport.getBoundingClientRect();
+            const frameWidth = 800 * state.zoom;
+            const frameHeight = 600 * state.zoom;
+
+            state.panX = (viewport.width - frameWidth) / 2;
+            state.panY = (viewport.height - frameHeight) / 2;
+            updateTransform();
+        }
+
+        function handleWheel(e) {
+            // Only handle zoom when over canvas area
+            if (!elements.canvasArea.contains(e.target) && e.target !== elements.canvasArea) {
+                return;
+            }
+
+            e.preventDefault();
+
+            const rect = elements.canvasViewport.getBoundingClientRect();
+            const centerX = e.clientX - rect.left;
+            const centerY = e.clientY - rect.top;
+
+            // Smooth zoom factor based on scroll delta
+            const delta = -e.deltaY;
+            const zoomFactor = Math.pow(1.002, delta);
+
+            // Disable transition for wheel zoom (smoother continuous zoom)
+            elements.canvasTransform.classList.add('no-transition');
+            zoomTo(state.zoom * zoomFactor, centerX, centerY);
+        }
+
+        function startPan(e) {
+            if (!state.isSpaceDown) return;
+
+            state.isPanning = true;
+            state.lastMouseX = e.clientX;
+            state.lastMouseY = e.clientY;
+            elements.canvasArea.classList.add('panning');
+            elements.canvasTransform.classList.add('no-transition');
+            e.preventDefault();
+        }
+
+        function doPan(e) {
+            if (!state.isPanning) return;
+
+            const deltaX = e.clientX - state.lastMouseX;
+            const deltaY = e.clientY - state.lastMouseY;
+
+            state.panX += deltaX;
+            state.panY += deltaY;
+            state.lastMouseX = e.clientX;
+            state.lastMouseY = e.clientY;
+
+            updateTransform(false);
+        }
+
+        function endPan() {
+            state.isPanning = false;
+            elements.canvasArea.classList.remove('panning');
+        }
 
         // =========================================================================
         // Undo/Redo System
@@ -607,6 +811,12 @@
                 elements.dropZone.classList.add('hidden');
                 elements.canvasWrapper.classList.remove('hidden');
                 elements.btnExport.disabled = false;
+
+                // Reset zoom and center on load
+                state.zoom = 1;
+                requestAnimationFrame(() => {
+                    centerCanvas();
+                });
             };
             reader.readAsText(file);
         }
@@ -852,6 +1062,7 @@
             let hoveredElement = null;
 
             doc.body.addEventListener('mouseover', (e) => {
+                if (state.isPanning) return;
                 if (hoveredElement && hoveredElement !== state.selectedElement) {
                     hoveredElement.classList.remove('editor-hover');
                 }
@@ -868,6 +1079,7 @@
             });
 
             doc.body.addEventListener('click', (e) => {
+                if (state.isPanning) return;
                 e.preventDefault();
                 e.stopPropagation();
                 const path = getElementPath(e.target, doc.body);
@@ -875,6 +1087,7 @@
             });
 
             doc.body.addEventListener('dblclick', (e) => {
+                if (state.isPanning) return;
                 e.preventDefault();
                 if (isTextElement(e.target)) {
                     enableInlineEdit(e.target);
@@ -1083,7 +1296,23 @@
         elements.btnUndo.addEventListener('click', undo);
         elements.btnRedo.addEventListener('click', redo);
 
+        // Zoom controls
+        elements.btnZoomIn.addEventListener('click', () => zoomIn());
+        elements.btnZoomOut.addEventListener('click', () => zoomOut());
+        elements.btnFit.addEventListener('click', fitToScreen);
+        elements.zoomLevel.addEventListener('click', resetZoom);
+
+        // Wheel zoom
+        elements.canvasArea.addEventListener('wheel', handleWheel, { passive: false });
+
+        // Space + drag pan
         document.addEventListener('keydown', (e) => {
+            if (e.code === 'Space' && !e.repeat && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+                state.isSpaceDown = true;
+                elements.canvasArea.classList.add('panning');
+                e.preventDefault();
+            }
+
             if (e.ctrlKey || e.metaKey) {
                 if (e.key === 'z') {
                     e.preventDefault();
@@ -1094,6 +1323,36 @@
                     e.preventDefault();
                     redo();
                 }
+                if (e.key === '0') {
+                    e.preventDefault();
+                    fitToScreen();
+                }
+                if (e.key === '=' || e.key === '+') {
+                    e.preventDefault();
+                    zoomIn();
+                }
+                if (e.key === '-') {
+                    e.preventDefault();
+                    zoomOut();
+                }
+            }
+        });
+
+        document.addEventListener('keyup', (e) => {
+            if (e.code === 'Space') {
+                state.isSpaceDown = false;
+                if (!state.isPanning) {
+                    elements.canvasArea.classList.remove('panning');
+                }
+            }
+        });
+
+        elements.canvasArea.addEventListener('mousedown', startPan);
+        document.addEventListener('mousemove', doPan);
+        document.addEventListener('mouseup', () => {
+            endPan();
+            if (!state.isSpaceDown) {
+                elements.canvasArea.classList.remove('panning');
             }
         });
 
@@ -1118,6 +1377,9 @@
 
         elements.propWidth.addEventListener('change', (e) => applyProperty('width', e.target.value));
         elements.propHeight.addEventListener('change', (e) => applyProperty('height', e.target.value));
+
+        // Initialize transform
+        updateTransform();
 
     })();
     </script>
