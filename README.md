@@ -44,7 +44,7 @@ No build tools. No frameworks. Just open `index.html` and start mangling.
 
 ```bash
 # Clone it
-git clone https://github.com/ArcadeLabsInc/mangle.html.git
+git clone https://github.com/Perttulands/mangle.html.git
 
 # Open it
 open index.html
