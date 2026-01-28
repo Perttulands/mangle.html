@@ -1838,6 +1838,271 @@
             clip: rect(0, 0, 0, 0);
             border: 0;
         }
+
+        /* === DOCUMENT COLORS PALETTE === */
+        .color-picker-wrapper {
+            position: relative;
+        }
+
+        .color-picker-row {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+        }
+
+        .color-picker-row .property-input[type="color"] {
+            flex-shrink: 0;
+        }
+
+        .color-value-display {
+            flex: 1;
+            font-family: var(--font-mono);
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            text-transform: uppercase;
+            cursor: pointer;
+            padding: var(--space-1) var(--space-2);
+            border-radius: var(--radius-sm);
+            transition: all var(--transition-fast);
+            background: var(--bg-muted);
+        }
+
+        .color-value-display:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+
+        .document-colors {
+            margin-top: var(--space-3);
+        }
+
+        .document-colors-header {
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            margin-bottom: var(--space-2);
+        }
+
+        .document-colors-label {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            font-weight: 500;
+        }
+
+        .document-colors-grid {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+        }
+
+        .doc-color-swatch {
+            width: 24px;
+            height: 24px;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            border: 2px solid transparent;
+            transition: all var(--transition-fast);
+            position: relative;
+        }
+
+        .doc-color-swatch::after {
+            content: '';
+            position: absolute;
+            inset: 0;
+            border-radius: calc(var(--radius-sm) - 2px);
+            box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.15), inset 0 0 0 1px rgba(255, 255, 255, 0.1);
+            pointer-events: none;
+        }
+
+        .doc-color-swatch:hover {
+            transform: scale(1.15);
+            border-color: var(--accent);
+            z-index: 1;
+        }
+
+        .doc-color-swatch.active {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 2px var(--accent-muted);
+        }
+
+        .doc-color-swatch-count {
+            position: absolute;
+            bottom: -4px;
+            right: -4px;
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            font-size: 9px;
+            font-weight: 600;
+            color: var(--text-secondary);
+            padding: 0 3px;
+            border-radius: 4px;
+            line-height: 1.4;
+            min-width: 14px;
+            text-align: center;
+        }
+
+        .doc-color-actions {
+            display: flex;
+            gap: var(--space-1);
+            margin-top: var(--space-2);
+        }
+
+        .btn-replace-color {
+            flex: 1;
+            font-size: var(--text-xs);
+            padding: var(--space-1) var(--space-2);
+            background: var(--accent-subtle);
+            border: 1px solid var(--accent);
+            color: var(--accent);
+            border-radius: var(--radius-md);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .btn-replace-color:hover {
+            background: var(--accent-muted);
+        }
+
+        .btn-replace-color:disabled {
+            opacity: 0.4;
+            cursor: not-allowed;
+        }
+
+        /* Replace Color Modal */
+        .color-replace-modal {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: all var(--transition-base);
+            backdrop-filter: blur(4px);
+        }
+
+        .color-replace-modal.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .color-replace-modal-content {
+            background: var(--bg-elevated);
+            border: 1px solid var(--border-default);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            max-width: 380px;
+            width: 90%;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.95) translateY(10px);
+            transition: transform var(--transition-base);
+        }
+
+        .color-replace-modal.visible .color-replace-modal-content {
+            transform: scale(1) translateY(0);
+        }
+
+        .color-replace-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text);
+            margin-bottom: var(--space-4);
+            text-align: center;
+        }
+
+        .color-replace-preview {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            gap: var(--space-4);
+            margin-bottom: var(--space-4);
+            padding: var(--space-4);
+            background: var(--bg-subtle);
+            border-radius: var(--radius-lg);
+        }
+
+        .color-replace-swatch {
+            width: 56px;
+            height: 56px;
+            border-radius: var(--radius-md);
+            border: 2px solid var(--border-default);
+            position: relative;
+        }
+
+        .color-replace-swatch-label {
+            position: absolute;
+            bottom: -20px;
+            left: 50%;
+            transform: translateX(-50%);
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            white-space: nowrap;
+        }
+
+        .color-replace-arrow {
+            color: var(--text-muted);
+            font-size: var(--text-2xl);
+        }
+
+        .color-replace-info {
+            text-align: center;
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+            margin-bottom: var(--space-4);
+            padding: var(--space-3);
+            background: var(--accent-subtle);
+            border-radius: var(--radius-md);
+        }
+
+        .color-replace-info strong {
+            color: var(--text);
+        }
+
+        .color-replace-new-color {
+            display: flex;
+            align-items: center;
+            gap: var(--space-3);
+            margin-bottom: var(--space-4);
+            padding: var(--space-3);
+            background: var(--bg-muted);
+            border-radius: var(--radius-md);
+        }
+
+        .color-replace-new-color label {
+            font-size: var(--text-sm);
+            color: var(--text-secondary);
+        }
+
+        .color-replace-new-color input[type="color"] {
+            width: 48px;
+            height: 32px;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+        }
+
+        .color-replace-new-color .color-value-display {
+            flex: 1;
+        }
+
+        .color-replace-actions {
+            display: flex;
+            gap: var(--space-2);
+            justify-content: flex-end;
+        }
+
+        .color-replace-actions .btn {
+            padding: var(--space-2) var(--space-4);
+        }
+
+        .no-document-colors {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            font-style: italic;
+            padding: var(--space-2) 0;
+        }
     </style>
 </head>
 <body>
@@ -2145,7 +2410,21 @@
                     </div>
                     <div class="property-row">
                         <label class="property-label">Color</label>
-                        <input type="color" class="property-input" id="prop-color" value="#000000">
+                        <div class="color-picker-wrapper">
+                            <div class="color-picker-row">
+                                <input type="color" class="property-input" id="prop-color" value="#000000">
+                                <span class="color-value-display" id="prop-color-value" title="Click to copy">#000000</span>
+                            </div>
+                            <div class="document-colors" id="doc-colors-text">
+                                <div class="document-colors-header">
+                                    <span class="document-colors-label">Document colors</span>
+                                </div>
+                                <div class="document-colors-grid" id="doc-colors-text-grid"></div>
+                                <div class="doc-color-actions">
+                                    <button class="btn-replace-color" id="btn-replace-text-color" disabled>Replace all...</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                     <div class="property-row">
                         <label class="property-label">Text Align</label>
@@ -2164,7 +2443,21 @@
                     <div class="property-section-title">Background</div>
                     <div class="property-row">
                         <label class="property-label">Color</label>
-                        <input type="color" class="property-input" id="prop-bg-color" value="#ffffff">
+                        <div class="color-picker-wrapper">
+                            <div class="color-picker-row">
+                                <input type="color" class="property-input" id="prop-bg-color" value="#ffffff">
+                                <span class="color-value-display" id="prop-bg-color-value" title="Click to copy">#ffffff</span>
+                            </div>
+                            <div class="document-colors" id="doc-colors-bg">
+                                <div class="document-colors-header">
+                                    <span class="document-colors-label">Document colors</span>
+                                </div>
+                                <div class="document-colors-grid" id="doc-colors-bg-grid"></div>
+                                <div class="doc-color-actions">
+                                    <button class="btn-replace-color" id="btn-replace-bg-color" disabled>Replace all...</button>
+                                </div>
+                            </div>
+                        </div>
                     </div>
                 </div>
 
@@ -2217,6 +2510,34 @@
 
     <!-- Toast Container -->
     <div class="toast-container" id="toast-container"></div>
+
+    <!-- Color Replace Modal -->
+    <div class="color-replace-modal" id="color-replace-modal">
+        <div class="color-replace-modal-content">
+            <div class="color-replace-title">Replace Color</div>
+            <div class="color-replace-preview">
+                <div class="color-replace-swatch" id="replace-from-swatch">
+                    <span class="color-replace-swatch-label">From</span>
+                </div>
+                <span class="color-replace-arrow">→</span>
+                <div class="color-replace-swatch" id="replace-to-swatch">
+                    <span class="color-replace-swatch-label">To</span>
+                </div>
+            </div>
+            <div class="color-replace-info" id="replace-info">
+                Found <strong id="replace-count">0</strong> elements using this color
+            </div>
+            <div class="color-replace-new-color">
+                <label>New color:</label>
+                <input type="color" id="replace-new-color" value="#000000">
+                <span class="color-value-display" id="replace-new-color-value">#000000</span>
+            </div>
+            <div class="color-replace-actions">
+                <button class="btn" id="btn-cancel-replace">Cancel</button>
+                <button class="btn btn-primary" id="btn-confirm-replace">Replace All</button>
+            </div>
+        </div>
+    </div>
 
     <!-- Spacing Drag Value Display -->
     <div class="spacing-drag-value" id="spacing-drag-value">0px</div>
@@ -2340,7 +2661,12 @@
             spacingDragStartY: 0,
             spacingDragStartX: 0,
             spacingDragStartValue: 0,
-            spacingShiftKey: false
+            spacingShiftKey: false,
+            // Document colors state
+            documentColors: [],
+            selectedDocColor: null,
+            replaceColorType: null, // 'text' or 'bg'
+            replaceFromColor: null
         };
 
         // =========================================================================
@@ -2434,7 +2760,23 @@
             paddingTopLabel: document.getElementById('padding-top-label'),
             paddingRightLabel: document.getElementById('padding-right-label'),
             paddingBottomLabel: document.getElementById('padding-bottom-label'),
-            paddingLeftLabel: document.getElementById('padding-left-label')
+            paddingLeftLabel: document.getElementById('padding-left-label'),
+            // Document colors elements
+            propColorValue: document.getElementById('prop-color-value'),
+            propBgColorValue: document.getElementById('prop-bg-color-value'),
+            docColorsTextGrid: document.getElementById('doc-colors-text-grid'),
+            docColorsBgGrid: document.getElementById('doc-colors-bg-grid'),
+            btnReplaceTextColor: document.getElementById('btn-replace-text-color'),
+            btnReplaceBgColor: document.getElementById('btn-replace-bg-color'),
+            colorReplaceModal: document.getElementById('color-replace-modal'),
+            replaceFromSwatch: document.getElementById('replace-from-swatch'),
+            replaceToSwatch: document.getElementById('replace-to-swatch'),
+            replaceInfo: document.getElementById('replace-info'),
+            replaceCount: document.getElementById('replace-count'),
+            replaceNewColor: document.getElementById('replace-new-color'),
+            replaceNewColorValue: document.getElementById('replace-new-color-value'),
+            btnCancelReplace: document.getElementById('btn-cancel-replace'),
+            btnConfirmReplace: document.getElementById('btn-confirm-replace')
         };
 
         // =========================================================================
@@ -2986,6 +3328,9 @@
                 centerCanvas();
             });
 
+            // Scan for document colors
+            setTimeout(() => scanDocumentColors(), 100);
+
             showToast('success', 'Sample loaded', 'Try selecting elements and editing their properties!');
         }
 
@@ -3339,6 +3684,9 @@
                 requestAnimationFrame(() => {
                     centerCanvas();
                 });
+
+                // Scan for document colors
+                setTimeout(() => scanDocumentColors(), 100);
 
                 showToast('success', 'File loaded', `${file.name} loaded successfully.`);
             };
@@ -4348,10 +4696,18 @@
 
             elements.propFontSize.value = computed.fontSize;
             elements.propFontWeight.value = computed.fontWeight;
-            elements.propColor.value = rgbToHex(computed.color);
+            const textColor = rgbToHex(computed.color);
+            elements.propColor.value = textColor;
+            elements.propColorValue.textContent = textColor;
             elements.propTextAlign.value = computed.textAlign;
 
-            elements.propBgColor.value = rgbToHex(computed.backgroundColor);
+            const bgColor = rgbToHex(computed.backgroundColor);
+            elements.propBgColor.value = bgColor;
+            elements.propBgColorValue.textContent = bgColor;
+
+            // Update active color swatches
+            updateActiveColorSwatch(textColor, 'text');
+            updateActiveColorSwatch(bgColor, 'bg');
 
             elements.propMarginTop.value = computed.marginTop;
             elements.propMarginRight.value = computed.marginRight;
@@ -4387,6 +4743,292 @@
             return '#' + r + g + b;
         }
 
+        // =========================================================================
+        // Document Colors System
+        // =========================================================================
+
+        function scanDocumentColors() {
+            if (!state.documentLoaded) return;
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            if (!doc.body) return;
+
+            const colorMap = new Map(); // color -> { count, elements, properties }
+            const allElements = doc.body.querySelectorAll('*:not(script):not(style):not(#editor-styles)');
+
+            allElements.forEach(el => {
+                const computed = doc.defaultView.getComputedStyle(el);
+
+                // Scan text color
+                const textColor = rgbToHex(computed.color);
+                if (textColor && textColor !== '#000000') { // Skip pure black as it's often default
+                    addColorToMap(colorMap, textColor, el, 'color');
+                }
+
+                // Scan background color
+                const bgColor = rgbToHex(computed.backgroundColor);
+                if (bgColor && bgColor !== '#ffffff' && bgColor !== '#000000' && computed.backgroundColor !== 'rgba(0, 0, 0, 0)') {
+                    addColorToMap(colorMap, bgColor, el, 'backgroundColor');
+                }
+
+                // Scan inline style colors (higher priority as user likely set these)
+                if (el.style.color) {
+                    const inlineColor = rgbToHex(el.style.color);
+                    if (inlineColor) addColorToMap(colorMap, inlineColor, el, 'color');
+                }
+                if (el.style.backgroundColor) {
+                    const inlineBgColor = rgbToHex(el.style.backgroundColor);
+                    if (inlineBgColor) addColorToMap(colorMap, inlineBgColor, el, 'backgroundColor');
+                }
+
+                // Scan border colors
+                const borderColor = rgbToHex(computed.borderColor);
+                if (borderColor && borderColor !== '#000000' && computed.borderWidth !== '0px') {
+                    addColorToMap(colorMap, borderColor, el, 'borderColor');
+                }
+            });
+
+            // Convert map to sorted array (most used first)
+            state.documentColors = Array.from(colorMap.entries())
+                .map(([color, data]) => ({
+                    color,
+                    count: data.count,
+                    elements: data.elements,
+                    properties: data.properties
+                }))
+                .sort((a, b) => b.count - a.count);
+
+            // Update UI
+            renderDocumentColors();
+        }
+
+        function addColorToMap(map, color, element, property) {
+            if (!map.has(color)) {
+                map.set(color, { count: 0, elements: [], properties: new Set() });
+            }
+            const data = map.get(color);
+            data.count++;
+            if (!data.elements.includes(element)) {
+                data.elements.push(element);
+            }
+            data.properties.add(property);
+        }
+
+        function renderDocumentColors() {
+            const textGrid = elements.docColorsTextGrid;
+            const bgGrid = elements.docColorsBgGrid;
+
+            // Clear existing
+            textGrid.innerHTML = '';
+            bgGrid.innerHTML = '';
+
+            if (state.documentColors.length === 0) {
+                textGrid.innerHTML = '<span class="no-document-colors">No colors found</span>';
+                bgGrid.innerHTML = '<span class="no-document-colors">No colors found</span>';
+                elements.btnReplaceTextColor.disabled = true;
+                elements.btnReplaceBgColor.disabled = true;
+                return;
+            }
+
+            // Render color swatches (limit to 12 per grid)
+            const maxColors = 12;
+            state.documentColors.slice(0, maxColors).forEach(colorData => {
+                // Text color swatch
+                const textSwatch = createColorSwatch(colorData, 'text');
+                textGrid.appendChild(textSwatch);
+
+                // Background color swatch
+                const bgSwatch = createColorSwatch(colorData, 'bg');
+                bgGrid.appendChild(bgSwatch);
+            });
+        }
+
+        function createColorSwatch(colorData, type) {
+            const swatch = document.createElement('div');
+            swatch.className = 'doc-color-swatch';
+            swatch.style.backgroundColor = colorData.color;
+            swatch.title = `${colorData.color} (${colorData.count} uses)`;
+            swatch.dataset.color = colorData.color;
+            swatch.dataset.type = type;
+
+            // Add count badge for colors used more than once
+            if (colorData.count > 1) {
+                const countBadge = document.createElement('span');
+                countBadge.className = 'doc-color-swatch-count';
+                countBadge.textContent = colorData.count > 99 ? '99+' : colorData.count;
+                swatch.appendChild(countBadge);
+            }
+
+            // Click to apply color
+            swatch.addEventListener('click', (e) => {
+                e.stopPropagation();
+                applyDocumentColor(colorData.color, type);
+            });
+
+            // Right-click to select for replace
+            swatch.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+                selectColorForReplace(colorData.color, type);
+            });
+
+            return swatch;
+        }
+
+        function applyDocumentColor(color, type) {
+            if (!state.selectedElement) {
+                showToast('info', 'Select an element', 'Click on an element to apply this color');
+                return;
+            }
+
+            saveState();
+
+            if (type === 'text') {
+                state.selectedElement.style.color = color;
+                elements.propColor.value = color;
+                elements.propColorValue.textContent = color;
+            } else {
+                state.selectedElement.style.backgroundColor = color;
+                elements.propBgColor.value = color;
+                elements.propBgColorValue.textContent = color;
+            }
+
+            // Update swatches to show active state
+            updateActiveColorSwatch(color, type);
+            showToast('success', 'Color applied', `Applied ${color}`);
+        }
+
+        function updateActiveColorSwatch(color, type) {
+            const grid = type === 'text' ? elements.docColorsTextGrid : elements.docColorsBgGrid;
+            grid.querySelectorAll('.doc-color-swatch').forEach(swatch => {
+                swatch.classList.toggle('active', swatch.dataset.color === color);
+            });
+        }
+
+        function selectColorForReplace(color, type) {
+            state.replaceColorType = type;
+            state.replaceFromColor = color;
+            state.selectedDocColor = color;
+
+            // Update active state visually
+            updateActiveColorSwatch(color, type);
+
+            // Enable the replace button
+            if (type === 'text') {
+                elements.btnReplaceTextColor.disabled = false;
+            } else {
+                elements.btnReplaceBgColor.disabled = false;
+            }
+
+            showToast('info', 'Color selected', `Right-clicked ${color}. Click "Replace all..." to change it.`);
+        }
+
+        function openReplaceModal(type) {
+            // Find the current color (use selected or first in list)
+            let fromColor = state.selectedDocColor;
+            if (!fromColor && state.documentColors.length > 0) {
+                fromColor = state.documentColors[0].color;
+            }
+            if (!fromColor) {
+                showToast('warning', 'No color selected', 'Select a color first');
+                return;
+            }
+
+            state.replaceColorType = type;
+            state.replaceFromColor = fromColor;
+
+            // Find color data
+            const colorData = state.documentColors.find(c => c.color === fromColor);
+            const count = colorData ? colorData.count : 0;
+
+            // Update modal UI
+            elements.replaceFromSwatch.style.backgroundColor = fromColor;
+            elements.replaceToSwatch.style.backgroundColor = fromColor;
+            elements.replaceNewColor.value = fromColor;
+            elements.replaceNewColorValue.textContent = fromColor;
+            elements.replaceCount.textContent = count;
+            elements.replaceInfo.innerHTML = `Found <strong>${count}</strong> element${count !== 1 ? 's' : ''} using this color`;
+
+            // Show modal
+            elements.colorReplaceModal.classList.add('visible');
+        }
+
+        function closeReplaceModal() {
+            elements.colorReplaceModal.classList.remove('visible');
+            state.selectedDocColor = null;
+        }
+
+        function updateReplacePreview() {
+            const newColor = elements.replaceNewColor.value;
+            elements.replaceToSwatch.style.backgroundColor = newColor;
+            elements.replaceNewColorValue.textContent = newColor;
+        }
+
+        function executeColorReplace() {
+            const fromColor = state.replaceFromColor;
+            const toColor = elements.replaceNewColor.value;
+            const type = state.replaceColorType;
+
+            if (!fromColor || !toColor) return;
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            if (!doc.body) return;
+
+            saveState();
+
+            let replacedCount = 0;
+            const allElements = doc.body.querySelectorAll('*:not(script):not(style)');
+
+            allElements.forEach(el => {
+                const computed = doc.defaultView.getComputedStyle(el);
+
+                // Replace text colors
+                if (type === 'text') {
+                    const currentColor = rgbToHex(computed.color);
+                    if (currentColor === fromColor) {
+                        el.style.color = toColor;
+                        replacedCount++;
+                    }
+                }
+
+                // Replace background colors
+                if (type === 'bg') {
+                    const currentBgColor = rgbToHex(computed.backgroundColor);
+                    if (currentBgColor === fromColor) {
+                        el.style.backgroundColor = toColor;
+                        replacedCount++;
+                    }
+                }
+            });
+
+            closeReplaceModal();
+            scanDocumentColors();
+
+            // Update property panel if element is selected
+            if (state.selectedElement) {
+                showProperties(state.selectedElement);
+            }
+
+            showToast('success', 'Colors replaced', `Changed ${replacedCount} element${replacedCount !== 1 ? 's' : ''} from ${fromColor} to ${toColor}`);
+        }
+
+        function updateColorValueDisplay() {
+            // Update the color value displays when color inputs change
+            elements.propColorValue.textContent = elements.propColor.value;
+            elements.propBgColorValue.textContent = elements.propBgColor.value;
+        }
+
+        // Copy color to clipboard when clicking value display
+        function copyColorToClipboard(colorValue) {
+            navigator.clipboard.writeText(colorValue).then(() => {
+                showToast('success', 'Copied', `${colorValue} copied to clipboard`);
+            }).catch(() => {
+                showToast('error', 'Copy failed', 'Could not copy to clipboard');
+            });
+        }
+
         function applyProperty(property, value) {
             if (!state.selectedElement) return;
 
@@ -4396,6 +5038,11 @@
                 state.selectedElement.textContent = value;
             } else {
                 state.selectedElement.style[property] = value;
+            }
+
+            // Rescan document colors when color properties change
+            if (property === 'color' || property === 'backgroundColor') {
+                debounce(() => scanDocumentColors(), 500)();
             }
         }
 
@@ -5351,9 +5998,30 @@
         elements.propText.addEventListener('input', (e) => applyProperty('text', e.target.value));
         elements.propFontSize.addEventListener('change', (e) => applyProperty('fontSize', e.target.value));
         elements.propFontWeight.addEventListener('change', (e) => applyProperty('fontWeight', e.target.value));
-        elements.propColor.addEventListener('input', (e) => applyProperty('color', e.target.value));
+        elements.propColor.addEventListener('input', (e) => {
+            applyProperty('color', e.target.value);
+            elements.propColorValue.textContent = e.target.value;
+        });
         elements.propTextAlign.addEventListener('change', (e) => applyProperty('textAlign', e.target.value));
-        elements.propBgColor.addEventListener('input', (e) => applyProperty('backgroundColor', e.target.value));
+        elements.propBgColor.addEventListener('input', (e) => {
+            applyProperty('backgroundColor', e.target.value);
+            elements.propBgColorValue.textContent = e.target.value;
+        });
+
+        // Document colors event listeners
+        elements.propColorValue.addEventListener('click', () => copyColorToClipboard(elements.propColor.value));
+        elements.propBgColorValue.addEventListener('click', () => copyColorToClipboard(elements.propBgColor.value));
+        elements.btnReplaceTextColor.addEventListener('click', () => openReplaceModal('text'));
+        elements.btnReplaceBgColor.addEventListener('click', () => openReplaceModal('bg'));
+        elements.btnCancelReplace.addEventListener('click', closeReplaceModal);
+        elements.btnConfirmReplace.addEventListener('click', executeColorReplace);
+        elements.replaceNewColor.addEventListener('input', updateReplacePreview);
+        elements.replaceNewColorValue.addEventListener('click', () => copyColorToClipboard(elements.replaceNewColor.value));
+
+        // Close modal on escape or click outside
+        elements.colorReplaceModal.addEventListener('click', (e) => {
+            if (e.target === elements.colorReplaceModal) closeReplaceModal();
+        });
 
         elements.propMarginTop.addEventListener('change', (e) => applyProperty('marginTop', e.target.value));
         elements.propMarginRight.addEventListener('change', (e) => applyProperty('marginRight', e.target.value));
