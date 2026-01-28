@@ -63,7 +63,7 @@
 - [ ] Smooth animations throughout
 - [ ] Tooltips with keyboard hints
 - [x] Welcome screen with sample file
-- [ ] Context menu (right-click)
+- [x] Context menu (right-click)
 - [ ] Minimap preview
 - [ ] Command palette (Ctrl+K)
 

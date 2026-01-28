@@ -1292,6 +1292,146 @@
         }
 
         // =========================================================================
+        // Context Menu
+        // =========================================================================
+
+        function showContextMenu(x, y, element) {
+            const menu = elements.contextMenu;
+
+            // Update menu item states
+            const pasteItem = menu.querySelector('[data-action="paste"]');
+            const editTextItem = menu.querySelector('[data-action="edit-text"]');
+            const moveUpItem = menu.querySelector('[data-action="move-up"]');
+            const moveDownItem = menu.querySelector('[data-action="move-down"]');
+
+            // Disable paste if clipboard empty
+            pasteItem.classList.toggle('disabled', state.clipboard.length === 0);
+
+            // Disable edit text for elements without text content
+            const hasTextContent = element && (
+                element.childNodes.length === 0 ||
+                (element.childNodes.length === 1 && element.childNodes[0].nodeType === 3)
+            );
+            editTextItem.classList.toggle('disabled', !hasTextContent);
+
+            // Disable move up if first child
+            const isFirst = element && element.parentElement && element === element.parentElement.firstElementChild;
+            moveUpItem.classList.toggle('disabled', isFirst);
+
+            // Disable move down if last child
+            const isLast = element && element.parentElement && element === element.parentElement.lastElementChild;
+            moveDownItem.classList.toggle('disabled', isLast);
+
+            // Position menu
+            menu.style.left = x + 'px';
+            menu.style.top = y + 'px';
+
+            // Show menu
+            menu.classList.add('visible');
+
+            // Adjust position if menu goes off screen
+            requestAnimationFrame(() => {
+                const rect = menu.getBoundingClientRect();
+                if (rect.right > window.innerWidth) {
+                    menu.style.left = (x - rect.width) + 'px';
+                }
+                if (rect.bottom > window.innerHeight) {
+                    menu.style.top = (y - rect.height) + 'px';
+                }
+            });
+        }
+
+        function hideContextMenu() {
+            elements.contextMenu.classList.remove('visible');
+        }
+
+        function handleContextMenuAction(action) {
+            if (!state.selectedElement) return;
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+
+            switch (action) {
+                case 'edit-text':
+                    // Focus the text content input in properties panel
+                    if (elements.propText) {
+                        elements.propText.focus();
+                        elements.propText.select();
+                    }
+                    break;
+
+                case 'duplicate':
+                    duplicateSelectedElement();
+                    break;
+
+                case 'copy':
+                    copySelectedElements();
+                    showToast('info', 'Copied', 'Element copied to clipboard');
+                    break;
+
+                case 'paste':
+                    pasteElements();
+                    break;
+
+                case 'move-up':
+                    moveElementUp();
+                    break;
+
+                case 'move-down':
+                    moveElementDown();
+                    break;
+
+                case 'delete':
+                    deleteSelectedElement();
+                    break;
+            }
+
+            hideContextMenu();
+        }
+
+        function moveElementUp() {
+            if (!state.selectedElement) return;
+
+            const element = state.selectedElement;
+            const parent = element.parentElement;
+            const prev = element.previousElementSibling;
+
+            if (!prev || element.tagName === 'BODY') return;
+
+            saveState();
+            parent.insertBefore(element, prev);
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            buildElementTree(doc.body);
+
+            // Reselect the element
+            const newPath = getElementPath(element, doc.body);
+            selectElementByPath(newPath);
+        }
+
+        function moveElementDown() {
+            if (!state.selectedElement) return;
+
+            const element = state.selectedElement;
+            const parent = element.parentElement;
+            const next = element.nextElementSibling;
+
+            if (!next || element.tagName === 'BODY') return;
+
+            saveState();
+            parent.insertBefore(next, element);
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            buildElementTree(doc.body);
+
+            // Reselect the element
+            const newPath = getElementPath(element, doc.body);
+            selectElementByPath(newPath);
+        }
+
+        // =========================================================================
         // Sample HTML
         // =========================================================================
 
@@ -2212,6 +2352,25 @@
                     enableInlineEdit(e.target);
                 }
             });
+
+            // Context menu on right-click
+            doc.body.addEventListener('contextmenu', (e) => {
+                e.preventDefault();
+                e.stopPropagation();
+
+                // Select the element if not already selected
+                const path = getElementPath(e.target, doc.body);
+                if (!state.selectedElements.includes(e.target)) {
+                    selectElementByPath(path);
+                }
+
+                // Get position relative to main window
+                const frameRect = elements.previewFrame.getBoundingClientRect();
+                const x = frameRect.left + e.clientX * state.zoom + state.panX;
+                const y = frameRect.top + e.clientY * state.zoom + state.panY;
+
+                showContextMenu(e.clientX + frameRect.left, e.clientY + frameRect.top, e.target);
+            });
         }
 
         function getElementPath(element, root) {
@@ -2633,6 +2792,30 @@
         // =========================================================================
         // Event Listeners
         // =========================================================================
+
+        // Context menu events
+        elements.contextMenu.addEventListener('click', (e) => {
+            const item = e.target.closest('.context-menu-item');
+            if (item && !item.classList.contains('disabled')) {
+                handleContextMenuAction(item.dataset.action);
+            }
+        });
+
+        // Close context menu on click outside or escape
+        document.addEventListener('click', (e) => {
+            if (!elements.contextMenu.contains(e.target)) {
+                hideContextMenu();
+            }
+        });
+
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                hideContextMenu();
+            }
+        }, true);
+
+        // Close context menu on scroll
+        document.addEventListener('scroll', hideContextMenu, true);
 
         elements.btnOpen.addEventListener('click', () => elements.fileInput.click());
         elements.fileInput.addEventListener('change', (e) => {
