@@ -60,12 +60,13 @@
 - [x] Element search/filter
 
 ### P3 - Delight
-- [ ] Smooth animations throughout
-- [ ] Tooltips with keyboard hints
+- [x] Smooth animations throughout
+- [x] Tooltips with keyboard hints
 - [x] Welcome screen with sample file
 - [x] Context menu (right-click)
 - [ ] Minimap preview
 - [ ] Command palette (Ctrl+K)
+- [x] Premium UI design (Linear/Figma-inspired)
 
 ---
 
