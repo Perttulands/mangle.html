@@ -1,52 +1,117 @@
-# HTML Editor - Product Requirements Document
+# mangle.html - Product Requirements Document
 
-## Problem
-Prototyping in .html is great, but editing raw HTML files is cumbersome. We need a visual, Figma-like editor for HTML files.
+## Vision
+**The Figma of HTML editing.** Load any HTML file, edit it visually, export clean code. Zero setup, runs in browser.
 
-## Goal
-Build an online webapp where users can:
-1. Load a .html file
-2. Visually edit it (Figma-like feel)
-3. Save/export the modified HTML
+## Target Users
+- Developers prototyping UIs in HTML
+- Designers who know basic HTML
+- Anyone who wants to visually tweak HTML without code editors
 
-## Core Requirements
-
-### Must Have (MVP)
-- [ ] File upload: drag & drop or browse to load .html
-- [ ] Live preview: render the HTML in an iframe/canvas
-- [ ] Visual selection: click elements to select them
-- [ ] Property panel: edit selected element's properties (text, styles, attributes)
-- [ ] Export: download modified .html file
-- [ ] Undo/redo
-
-### Should Have
-- [ ] Element tree: sidebar showing DOM hierarchy
-- [ ] Drag to reorder/reparent elements
-- [ ] Add new elements (div, text, image, button)
-- [ ] Style editor: visual CSS (colors, spacing, fonts)
-- [ ] Grid/guides for alignment
-
-### Nice to Have
-- [ ] Templates/components
-- [ ] Responsive preview (phone/tablet/desktop)
-- [ ] Collaboration features
-- [ ] Version history
-
-## Tech Stack
-- Single HTML file (self-contained, easy to deploy)
-- Vanilla JS or minimal framework
-- No backend required (all client-side)
-
-## UX Reference
-- Figma: clean canvas, left sidebar for layers, right sidebar for properties
-- Direct manipulation: click to select, drag to move
-- Minimal chrome, maximum canvas
-
-## Success Criteria
-- User can load any .html, make visual edits, export working .html
-- Feels intuitive to someone who's used Figma
-- Works in modern browsers without installation
+## Success Metrics
+- 1000+ GitHub stars
+- Featured on Hacker News, Product Hunt
+- Users say "this is exactly what I needed"
 
 ---
 
-*Created: 2026-01-28*
+## Core Principles
+
+1. **Zero friction** — Drag file in, start editing. No install, no build.
+2. **Figma-like feel** — Direct manipulation, visual feedback, keyboard shortcuts
+3. **Clean output** — Export valid HTML, no editor artifacts
+4. **Single file** — Everything in index.html, easy to fork/deploy
+
+---
+
+## Feature Requirements
+
+### P0 - MVP (DONE ✅)
+- [x] Drag & drop file upload
+- [x] Live preview in sandboxed iframe
+- [x] Click elements to select (blue highlight)
+- [x] Property panel showing tag, id, classes
+- [x] Edit text content inline
+- [x] Style editor (colors, fonts, margin/padding)
+- [x] Export/download modified HTML
+- [x] Undo/redo (Ctrl+Z, Ctrl+Y)
+
+### P1 - Core UX (IN PROGRESS)
+- [x] DOM tree sidebar (left panel)
+- [x] Click tree node → select element
+- [x] Drag tree nodes to reorder/reparent
+- [x] Canvas zoom (scroll wheel)
+- [x] Canvas pan (space + drag)
+- [x] Zoom indicator + fit-to-screen
+- [ ] Add new elements (div, p, img, button, etc.)
+- [ ] Delete elements (backspace/delete key)
+- [ ] Multi-select (shift+click, cmd+click)
+- [ ] Copy/paste elements (Ctrl+C, Ctrl+V)
+- [ ] Duplicate element (Ctrl+D or Alt+drag)
+- [ ] Keyboard shortcuts system
+
+### P2 - Polish
+- [ ] Responsive preview (phone/tablet/desktop)
+- [ ] Grid overlay toggle
+- [ ] Smart guides (snap to edges, centers)
+- [ ] Dark mode
+- [ ] Recent files (localStorage)
+- [ ] Auto-save drafts
+- [ ] Element search/filter
+
+### P3 - Delight
+- [ ] Smooth animations throughout
+- [ ] Tooltips with keyboard hints
+- [ ] Welcome screen with sample file
+- [ ] Context menu (right-click)
+- [ ] Minimap preview
+- [ ] Command palette (Ctrl+K)
+
+---
+
+## Technical Requirements
+
+### Must Have
+- Single HTML file (< 100KB)
+- No external dependencies
+- Works offline
+- Modern browsers (Chrome, Firefox, Safari, Edge)
+- Mobile-responsive editor UI
+
+### Nice to Have
+- Service worker for offline
+- PWA installable
+- URL params to load remote HTML
+
+---
+
+## Quality Bar
+
+### Before 1.0 Release
+- [ ] All P0 and P1 features complete
+- [ ] Manual QA pass on Chrome, Firefox, Safari
+- [ ] No console errors
+- [ ] Handles edge cases (empty file, huge file, malformed HTML)
+- [ ] Performance: loads 1000-element DOM in < 1s
+- [ ] Accessibility: keyboard navigable
+
+### Testing Scenarios
+1. Load simple HTML (< 50 elements) — should work perfectly
+2. Load complex HTML (500+ elements) — should be usable
+3. Edit text, styles, move elements — all should undo cleanly
+4. Export and re-import — should round-trip perfectly
+5. Zoom to 10%, zoom to 500% — should remain usable
+
+---
+
+## Non-Goals (v1)
+- Real-time collaboration
+- Backend/database
+- User accounts
+- Version control integration
+- CSS file editing (only inline styles)
+- JavaScript editing
+
+---
+
+*Ship fast, iterate based on feedback.*
