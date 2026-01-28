@@ -44,7 +44,7 @@
 - [x] Canvas pan (space + drag)
 - [x] Zoom indicator + fit-to-screen
 - [ ] Add new elements (div, p, img, button, etc.)
-- [ ] Delete elements (backspace/delete key)
+- [x] Delete elements (backspace/delete key)
 - [ ] Multi-select (shift+click, cmd+click)
 - [ ] Copy/paste elements (Ctrl+C, Ctrl+V)
 - [ ] Duplicate element (Ctrl+D or Alt+drag)

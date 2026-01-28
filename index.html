@@ -1161,6 +1161,42 @@
         }
 
         // =========================================================================
+        // Delete Element
+        // =========================================================================
+
+        function deleteSelectedElement() {
+            if (!state.selectedElement || !state.selectedPath) return false;
+
+            const element = state.selectedElement;
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+
+            // Don't delete body, html, head, or root-level structural elements
+            const tag = element.tagName.toUpperCase();
+            if (tag === 'BODY' || tag === 'HTML' || tag === 'HEAD') {
+                return false;
+            }
+
+            // Don't delete if it's the only child of body (would leave body empty)
+            if (element.parentElement === doc.body && doc.body.children.length === 1) {
+                return false;
+            }
+
+            // Save state for undo
+            saveState();
+
+            // Remove the element
+            const parent = element.parentElement;
+            parent.removeChild(element);
+
+            // Clear selection and rebuild tree
+            clearSelection();
+            buildElementTree(doc.body);
+
+            return true;
+        }
+
+        // =========================================================================
         // Inline Editing
         // =========================================================================
 
@@ -1307,10 +1343,27 @@
 
         // Space + drag pan
         document.addEventListener('keydown', (e) => {
-            if (e.code === 'Space' && !e.repeat && document.activeElement.tagName !== 'INPUT' && document.activeElement.tagName !== 'TEXTAREA') {
+            const activeTag = document.activeElement.tagName;
+            const isInputFocused = activeTag === 'INPUT' || activeTag === 'TEXTAREA';
+
+            if (e.code === 'Space' && !e.repeat && !isInputFocused) {
                 state.isSpaceDown = true;
                 elements.canvasArea.classList.add('panning');
                 e.preventDefault();
+            }
+
+            // Delete element with Backspace or Delete key
+            if ((e.key === 'Backspace' || e.key === 'Delete') && !isInputFocused) {
+                // Also check if we're editing inside the iframe
+                const frame = elements.previewFrame;
+                const frameDoc = frame.contentDocument || frame.contentWindow.document;
+                const frameActive = frameDoc.activeElement;
+                const isFrameEditing = frameActive && frameActive.isContentEditable;
+
+                if (!isFrameEditing && state.selectedElement) {
+                    e.preventDefault();
+                    deleteSelectedElement();
+                }
             }
 
             if (e.ctrlKey || e.metaKey) {
