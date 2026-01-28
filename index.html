@@ -214,6 +214,9 @@
         }
 
         .element-tree {
+            position: relative;
+            height: calc(100vh - 98px);
+            overflow-y: auto;
             padding: 8px 0;
         }
 
@@ -288,6 +291,14 @@
 
         .tree-node-indent {
             display: inline-block;
+        }
+
+        .tree-content {
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            will-change: transform;
         }
 
         /* Canvas Area */
@@ -993,7 +1004,14 @@
             maxZoom: 5,
             zoomStep: 0.1,
             // Document loaded
-            documentLoaded: false
+            documentLoaded: false,
+            // Performance optimization state
+            treeData: [],
+            treeScrollTop: 0,
+            visibleTreeStart: 0,
+            visibleTreeEnd: 0,
+            treeItemHeight: 25,
+            treeBuffer: 10
         };
 
         // =========================================================================
@@ -1045,6 +1063,40 @@
             textContentRow: document.getElementById('text-content-row'),
             toastContainer: document.getElementById('toast-container')
         };
+
+        // =========================================================================
+        // Performance Utilities
+        // =========================================================================
+
+        function debounce(fn, delay) {
+            let timeoutId;
+            return function(...args) {
+                clearTimeout(timeoutId);
+                timeoutId = setTimeout(() => fn.apply(this, args), delay);
+            };
+        }
+
+        function throttle(fn, limit) {
+            let inThrottle;
+            return function(...args) {
+                if (!inThrottle) {
+                    fn.apply(this, args);
+                    inThrottle = true;
+                    setTimeout(() => inThrottle = false, limit);
+                }
+            };
+        }
+
+        // Batch DOM operations using requestAnimationFrame
+        let pendingTreeRender = null;
+        function scheduleTreeRender(root) {
+            if (pendingTreeRender) return;
+            pendingTreeRender = requestAnimationFrame(() => {
+                pendingTreeRender = null;
+                buildElementTreeOptimized(root);
+            });
+        }
+
 
         // =========================================================================
         // Toast Notifications
@@ -1631,139 +1683,239 @@
         // Element Tree
         // =========================================================================
 
+        // Optimized buildElementTree with virtual scrolling for large DOMs
         function buildElementTree(root) {
-            elements.elementTree.innerHTML = '';
+            const startTime = performance.now();
 
-            function buildNode(element, depth, path) {
+            // First, flatten the DOM tree into an array for virtual scrolling
+            state.treeData = [];
+
+            function collectNodes(element, depth, path) {
                 if (element.nodeType !== 1) return;
                 if (element.tagName === 'SCRIPT' || element.tagName === 'STYLE') return;
 
-                const node = document.createElement('div');
-                node.className = 'tree-node';
-                node.dataset.path = path.join(',');
-                node.draggable = path.length > 0; // Don't allow dragging body
-
-                const indent = document.createElement('span');
-                indent.className = 'tree-node-indent';
-                indent.style.width = (depth * 16) + 'px';
-
-                const icon = document.createElement('span');
-                icon.className = 'tree-node-icon';
-                icon.textContent = getElementIcon(element.tagName);
-
-                const label = document.createElement('span');
                 const id = element.id ? '#' + element.id : '';
                 const cls = element.className && typeof element.className === 'string'
                     ? (element.className.split(' ').filter(c => c && !c.startsWith('editor-')).slice(0, 1)[0] ? '.' + element.className.split(' ').filter(c => c && !c.startsWith('editor-'))[0] : '')
                     : '';
-                label.textContent = element.tagName.toLowerCase() + id + cls;
 
-                node.appendChild(indent);
-                node.appendChild(icon);
-                node.appendChild(label);
-
-                node.addEventListener('click', (e) => {
-                    if (!e.defaultPrevented) {
-                        selectElementByPath(path, {
-                            addToSelection: e.shiftKey,
-                            toggleSelection: e.ctrlKey || e.metaKey
-                        });
-                    }
+                state.treeData.push({
+                    element: element,
+                    depth: depth,
+                    path: path,
+                    tagName: element.tagName,
+                    label: element.tagName.toLowerCase() + id + cls
                 });
-
-                // Drag and drop handlers
-                node.addEventListener('dragstart', (e) => {
-                    if (path.length === 0) {
-                        e.preventDefault();
-                        return;
-                    }
-                    state.draggedPath = path;
-                    // Check if Alt is held at drag start
-                    state.isAltDrag = e.altKey;
-                    node.classList.add(state.isAltDrag ? 'cloning' : 'dragging');
-                    e.dataTransfer.effectAllowed = state.isAltDrag ? 'copy' : 'move';
-                    e.dataTransfer.setData('text/plain', path.join(','));
-                });
-
-                node.addEventListener('dragend', () => {
-                    node.classList.remove('dragging', 'cloning');
-                    state.draggedPath = null;
-                    state.isAltDrag = false;
-                    clearDragIndicators();
-                });
-
-                node.addEventListener('dragover', (e) => {
-                    e.preventDefault();
-                    if (!state.draggedPath) return;
-
-                    const targetPath = path;
-                    if (isDescendantPath(targetPath, state.draggedPath)) return;
-                    if (!state.isAltDrag && !e.altKey && pathsEqual(targetPath, state.draggedPath)) return;
-
-                    clearDragIndicators();
-
-                    const rect = node.getBoundingClientRect();
-                    const y = e.clientY - rect.top;
-                    const height = rect.height;
-
-                    // Show clone indicator if Alt is held
-                    if (e.altKey || state.isAltDrag) {
-                        node.classList.add('clone-target');
-                    }
-
-                    if (y < height * 0.25) {
-                        node.classList.add('drag-over-before');
-                    } else if (y > height * 0.75) {
-                        node.classList.add('drag-over-after');
-                    } else {
-                        node.classList.add('drag-over-inside');
-                    }
-                });
-
-                node.addEventListener('dragleave', () => {
-                    node.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside', 'clone-target');
-                });
-
-                node.addEventListener('drop', (e) => {
-                    e.preventDefault();
-                    clearDragIndicators();
-
-                    if (!state.draggedPath) return;
-
-                    const targetPath = path;
-                    // For cloning, allow dropping on self (creates sibling)
-                    const isCloning = e.altKey || state.isAltDrag;
-                    if (isDescendantPath(targetPath, state.draggedPath)) return;
-                    if (!isCloning && pathsEqual(targetPath, state.draggedPath)) return;
-
-                    const rect = node.getBoundingClientRect();
-                    const y = e.clientY - rect.top;
-                    const height = rect.height;
-
-                    let dropPosition;
-                    if (y < height * 0.25) {
-                        dropPosition = 'before';
-                    } else if (y > height * 0.75) {
-                        dropPosition = 'after';
-                    } else {
-                        dropPosition = 'inside';
-                    }
-
-                    if (isCloning) {
-                        cloneElementToPosition(state.draggedPath, targetPath, dropPosition);
-                    } else {
-                        moveElement(state.draggedPath, targetPath, dropPosition);
-                    }
-                });
-
-                elements.elementTree.appendChild(node);
 
                 Array.from(element.children).forEach((child, i) => {
-                    buildNode(child, depth + 1, [...path, i]);
+                    collectNodes(child, depth + 1, [...path, i]);
                 });
             }
 
-            buildNode(root, 0, []);
+            collectNodes(root, 0, []);
+
+            // Set up virtual scrolling container
+            const container = elements.elementTree;
+            const itemHeight = state.treeItemHeight;
+            const totalHeight = state.treeData.length * itemHeight;
+
+            // Clear and set up the container
+            container.innerHTML = '';
+            container.style.position = 'relative';
+            container.style.height = '100%';
+            container.style.overflowY = 'auto';
+
+            // Create spacer for total height
+            const spacer = document.createElement('div');
+            spacer.style.height = totalHeight + 'px';
+            spacer.style.width = '1px';
+            spacer.style.position = 'absolute';
+            spacer.style.top = '0';
+            spacer.style.left = '0';
+            spacer.style.pointerEvents = 'none';
+            container.appendChild(spacer);
+
+            // Content container for visible items
+            const content = document.createElement('div');
+            content.className = 'tree-content';
+            content.style.position = 'absolute';
+            content.style.top = '0';
+            content.style.left = '0';
+            content.style.right = '0';
+            container.appendChild(content);
+
+            // Render visible items
+            function renderVisibleItems() {
+                const scrollTop = container.scrollTop;
+                const containerHeight = container.clientHeight;
+                const buffer = state.treeBuffer;
+
+                const startIndex = Math.max(0, Math.floor(scrollTop / itemHeight) - buffer);
+                const endIndex = Math.min(state.treeData.length, Math.ceil((scrollTop + containerHeight) / itemHeight) + buffer);
+
+                // Only re-render if viewport changed significantly
+                if (startIndex === state.visibleTreeStart && endIndex === state.visibleTreeEnd) {
+                    return;
+                }
+
+                state.visibleTreeStart = startIndex;
+                state.visibleTreeEnd = endIndex;
+
+                // Use DocumentFragment for batch DOM insertion
+                const fragment = document.createDocumentFragment();
+
+                for (let i = startIndex; i < endIndex; i++) {
+                    const item = state.treeData[i];
+                    const node = createTreeNode(item, i);
+                    fragment.appendChild(node);
+                }
+
+                content.innerHTML = '';
+                content.style.transform = `translateY(${startIndex * itemHeight}px)`;
+                content.appendChild(fragment);
+            }
+
+            // Throttled scroll handler
+            const handleScroll = throttle(renderVisibleItems, 16);
+            container.addEventListener('scroll', handleScroll);
+
+            // Initial render
+            renderVisibleItems();
+
+            const elapsed = performance.now() - startTime;
+            if (elapsed > 100) {
+                console.log(`Tree built: ${state.treeData.length} nodes in ${elapsed.toFixed(1)}ms`);
+            }
+        }
+
+        // Create a single tree node element
+        function createTreeNode(item, index) {
+            const { element, depth, path, tagName, label } = item;
+            const itemHeight = state.treeItemHeight;
+
+            const node = document.createElement('div');
+            node.className = 'tree-node';
+            node.dataset.path = path.join(',');
+            node.dataset.index = index;
+            node.draggable = path.length > 0;
+            node.style.height = itemHeight + 'px';
+
+            // Check if this node is selected
+            if (state.selectedPaths.some(sp => pathsEqual(sp, path))) {
+                node.classList.add('selected');
+            }
+
+            const indent = document.createElement('span');
+            indent.className = 'tree-node-indent';
+            indent.style.width = (depth * 16) + 'px';
+
+            const icon = document.createElement('span');
+            icon.className = 'tree-node-icon';
+            icon.textContent = getElementIcon(tagName);
+
+            const labelSpan = document.createElement('span');
+            labelSpan.textContent = label;
+
+            node.appendChild(indent);
+            node.appendChild(icon);
+            node.appendChild(labelSpan);
+
+            // Event delegation - attach handlers
+            node.addEventListener('click', (e) => {
+                if (!e.defaultPrevented) {
+                    selectElementByPath(path, {
+                        addToSelection: e.shiftKey,
+                        toggleSelection: e.ctrlKey || e.metaKey
+                    });
+                }
+            });
+
+            // Drag and drop handlers
+            node.addEventListener('dragstart', (e) => {
+                if (path.length === 0) {
+                    e.preventDefault();
+                    return;
+                }
+                state.draggedPath = path;
+                state.isAltDrag = e.altKey;
+                node.classList.add(state.isAltDrag ? 'cloning' : 'dragging');
+                e.dataTransfer.effectAllowed = state.isAltDrag ? 'copy' : 'move';
+                e.dataTransfer.setData('text/plain', path.join(','));
+            });
+
+            node.addEventListener('dragend', () => {
+                node.classList.remove('dragging', 'cloning');
+                state.draggedPath = null;
+                state.isAltDrag = false;
+                clearDragIndicators();
+            });
+
+            node.addEventListener('dragover', (e) => {
+                e.preventDefault();
+                if (!state.draggedPath) return;
+
+                if (isDescendantPath(path, state.draggedPath)) return;
+                if (!state.isAltDrag && !e.altKey && pathsEqual(path, state.draggedPath)) return;
+
+                clearDragIndicators();
+
+                const rect = node.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const height = rect.height;
+
+                if (e.altKey || state.isAltDrag) {
+                    node.classList.add('clone-target');
+                }
+
+                if (y < height * 0.25) {
+                    node.classList.add('drag-over-before');
+                } else if (y > height * 0.75) {
+                    node.classList.add('drag-over-after');
+                } else {
+                    node.classList.add('drag-over-inside');
+                }
+            });
+
+            node.addEventListener('dragleave', () => {
+                node.classList.remove('drag-over-before', 'drag-over-after', 'drag-over-inside', 'clone-target');
+            });
+
+            node.addEventListener('drop', (e) => {
+                e.preventDefault();
+                clearDragIndicators();
+
+                if (!state.draggedPath) return;
+
+                const isCloning = e.altKey || state.isAltDrag;
+                if (isDescendantPath(path, state.draggedPath)) return;
+                if (!isCloning && pathsEqual(path, state.draggedPath)) return;
+
+                const rect = node.getBoundingClientRect();
+                const y = e.clientY - rect.top;
+                const height = rect.height;
+
+                let dropPosition;
+                if (y < height * 0.25) {
+                    dropPosition = 'before';
+                } else if (y > height * 0.75) {
+                    dropPosition = 'after';
+                } else {
+                    dropPosition = 'inside';
+                }
+
+                if (isCloning) {
+                    cloneElementToPosition(state.draggedPath, path, dropPosition);
+                } else {
+                    moveElement(state.draggedPath, path, dropPosition);
+                }
+            });
+
+            return node;
+        }
+
+        // Optimized version for scheduled renders
+        function buildElementTreeOptimized(root) {
+            buildElementTree(root);
         }
 
         function clearDragIndicators() {

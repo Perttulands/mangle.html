@@ -1,0 +1,245 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Large DOM Test - 1000+ Elements</title>
+    <style>
+        .container { padding: 10px; margin: 5px; border: 1px solid #ccc; }
+        .item { padding: 5px; margin: 2px; background: #f0f0f0; }
+    </style>
+</head>
+<body>
+    <header>
+        <h1>Large DOM Performance Test</h1>
+        <nav>
+            <a href="#">Home</a>
+            <a href="#">About</a>
+            <a href="#">Contact</a>
+        </nav>
+    </header>
+    <main>
+        <!-- Section 1: 200 items -->
+        <section class="container" id="section1">
+            <h2>Section 1</h2>
+            <div class="item">Item 1</div><div class="item">Item 2</div><div class="item">Item 3</div><div class="item">Item 4</div><div class="item">Item 5</div>
+            <div class="item">Item 6</div><div class="item">Item 7</div><div class="item">Item 8</div><div class="item">Item 9</div><div class="item">Item 10</div>
+            <div class="item">Item 11</div><div class="item">Item 12</div><div class="item">Item 13</div><div class="item">Item 14</div><div class="item">Item 15</div>
+            <div class="item">Item 16</div><div class="item">Item 17</div><div class="item">Item 18</div><div class="item">Item 19</div><div class="item">Item 20</div>
+            <div class="item">Item 21</div><div class="item">Item 22</div><div class="item">Item 23</div><div class="item">Item 24</div><div class="item">Item 25</div>
+            <div class="item">Item 26</div><div class="item">Item 27</div><div class="item">Item 28</div><div class="item">Item 29</div><div class="item">Item 30</div>
+            <div class="item">Item 31</div><div class="item">Item 32</div><div class="item">Item 33</div><div class="item">Item 34</div><div class="item">Item 35</div>
+            <div class="item">Item 36</div><div class="item">Item 37</div><div class="item">Item 38</div><div class="item">Item 39</div><div class="item">Item 40</div>
+            <div class="item">Item 41</div><div class="item">Item 42</div><div class="item">Item 43</div><div class="item">Item 44</div><div class="item">Item 45</div>
+            <div class="item">Item 46</div><div class="item">Item 47</div><div class="item">Item 48</div><div class="item">Item 49</div><div class="item">Item 50</div>
+            <div class="item">Item 51</div><div class="item">Item 52</div><div class="item">Item 53</div><div class="item">Item 54</div><div class="item">Item 55</div>
+            <div class="item">Item 56</div><div class="item">Item 57</div><div class="item">Item 58</div><div class="item">Item 59</div><div class="item">Item 60</div>
+            <div class="item">Item 61</div><div class="item">Item 62</div><div class="item">Item 63</div><div class="item">Item 64</div><div class="item">Item 65</div>
+            <div class="item">Item 66</div><div class="item">Item 67</div><div class="item">Item 68</div><div class="item">Item 69</div><div class="item">Item 70</div>
+            <div class="item">Item 71</div><div class="item">Item 72</div><div class="item">Item 73</div><div class="item">Item 74</div><div class="item">Item 75</div>
+            <div class="item">Item 76</div><div class="item">Item 77</div><div class="item">Item 78</div><div class="item">Item 79</div><div class="item">Item 80</div>
+            <div class="item">Item 81</div><div class="item">Item 82</div><div class="item">Item 83</div><div class="item">Item 84</div><div class="item">Item 85</div>
+            <div class="item">Item 86</div><div class="item">Item 87</div><div class="item">Item 88</div><div class="item">Item 89</div><div class="item">Item 90</div>
+            <div class="item">Item 91</div><div class="item">Item 92</div><div class="item">Item 93</div><div class="item">Item 94</div><div class="item">Item 95</div>
+            <div class="item">Item 96</div><div class="item">Item 97</div><div class="item">Item 98</div><div class="item">Item 99</div><div class="item">Item 100</div>
+            <div class="item">Item 101</div><div class="item">Item 102</div><div class="item">Item 103</div><div class="item">Item 104</div><div class="item">Item 105</div>
+            <div class="item">Item 106</div><div class="item">Item 107</div><div class="item">Item 108</div><div class="item">Item 109</div><div class="item">Item 110</div>
+            <div class="item">Item 111</div><div class="item">Item 112</div><div class="item">Item 113</div><div class="item">Item 114</div><div class="item">Item 115</div>
+            <div class="item">Item 116</div><div class="item">Item 117</div><div class="item">Item 118</div><div class="item">Item 119</div><div class="item">Item 120</div>
+            <div class="item">Item 121</div><div class="item">Item 122</div><div class="item">Item 123</div><div class="item">Item 124</div><div class="item">Item 125</div>
+            <div class="item">Item 126</div><div class="item">Item 127</div><div class="item">Item 128</div><div class="item">Item 129</div><div class="item">Item 130</div>
+            <div class="item">Item 131</div><div class="item">Item 132</div><div class="item">Item 133</div><div class="item">Item 134</div><div class="item">Item 135</div>
+            <div class="item">Item 136</div><div class="item">Item 137</div><div class="item">Item 138</div><div class="item">Item 139</div><div class="item">Item 140</div>
+            <div class="item">Item 141</div><div class="item">Item 142</div><div class="item">Item 143</div><div class="item">Item 144</div><div class="item">Item 145</div>
+            <div class="item">Item 146</div><div class="item">Item 147</div><div class="item">Item 148</div><div class="item">Item 149</div><div class="item">Item 150</div>
+            <div class="item">Item 151</div><div class="item">Item 152</div><div class="item">Item 153</div><div class="item">Item 154</div><div class="item">Item 155</div>
+            <div class="item">Item 156</div><div class="item">Item 157</div><div class="item">Item 158</div><div class="item">Item 159</div><div class="item">Item 160</div>
+            <div class="item">Item 161</div><div class="item">Item 162</div><div class="item">Item 163</div><div class="item">Item 164</div><div class="item">Item 165</div>
+            <div class="item">Item 166</div><div class="item">Item 167</div><div class="item">Item 168</div><div class="item">Item 169</div><div class="item">Item 170</div>
+            <div class="item">Item 171</div><div class="item">Item 172</div><div class="item">Item 173</div><div class="item">Item 174</div><div class="item">Item 175</div>
+            <div class="item">Item 176</div><div class="item">Item 177</div><div class="item">Item 178</div><div class="item">Item 179</div><div class="item">Item 180</div>
+            <div class="item">Item 181</div><div class="item">Item 182</div><div class="item">Item 183</div><div class="item">Item 184</div><div class="item">Item 185</div>
+            <div class="item">Item 186</div><div class="item">Item 187</div><div class="item">Item 188</div><div class="item">Item 189</div><div class="item">Item 190</div>
+            <div class="item">Item 191</div><div class="item">Item 192</div><div class="item">Item 193</div><div class="item">Item 194</div><div class="item">Item 195</div>
+            <div class="item">Item 196</div><div class="item">Item 197</div><div class="item">Item 198</div><div class="item">Item 199</div><div class="item">Item 200</div>
+        </section>
+        <!-- Section 2: 200 items -->
+        <section class="container" id="section2">
+            <h2>Section 2</h2>
+            <div class="item">Item 1</div><div class="item">Item 2</div><div class="item">Item 3</div><div class="item">Item 4</div><div class="item">Item 5</div>
+            <div class="item">Item 6</div><div class="item">Item 7</div><div class="item">Item 8</div><div class="item">Item 9</div><div class="item">Item 10</div>
+            <div class="item">Item 11</div><div class="item">Item 12</div><div class="item">Item 13</div><div class="item">Item 14</div><div class="item">Item 15</div>
+            <div class="item">Item 16</div><div class="item">Item 17</div><div class="item">Item 18</div><div class="item">Item 19</div><div class="item">Item 20</div>
+            <div class="item">Item 21</div><div class="item">Item 22</div><div class="item">Item 23</div><div class="item">Item 24</div><div class="item">Item 25</div>
+            <div class="item">Item 26</div><div class="item">Item 27</div><div class="item">Item 28</div><div class="item">Item 29</div><div class="item">Item 30</div>
+            <div class="item">Item 31</div><div class="item">Item 32</div><div class="item">Item 33</div><div class="item">Item 34</div><div class="item">Item 35</div>
+            <div class="item">Item 36</div><div class="item">Item 37</div><div class="item">Item 38</div><div class="item">Item 39</div><div class="item">Item 40</div>
+            <div class="item">Item 41</div><div class="item">Item 42</div><div class="item">Item 43</div><div class="item">Item 44</div><div class="item">Item 45</div>
+            <div class="item">Item 46</div><div class="item">Item 47</div><div class="item">Item 48</div><div class="item">Item 49</div><div class="item">Item 50</div>
+            <div class="item">Item 51</div><div class="item">Item 52</div><div class="item">Item 53</div><div class="item">Item 54</div><div class="item">Item 55</div>
+            <div class="item">Item 56</div><div class="item">Item 57</div><div class="item">Item 58</div><div class="item">Item 59</div><div class="item">Item 60</div>
+            <div class="item">Item 61</div><div class="item">Item 62</div><div class="item">Item 63</div><div class="item">Item 64</div><div class="item">Item 65</div>
+            <div class="item">Item 66</div><div class="item">Item 67</div><div class="item">Item 68</div><div class="item">Item 69</div><div class="item">Item 70</div>
+            <div class="item">Item 71</div><div class="item">Item 72</div><div class="item">Item 73</div><div class="item">Item 74</div><div class="item">Item 75</div>
+            <div class="item">Item 76</div><div class="item">Item 77</div><div class="item">Item 78</div><div class="item">Item 79</div><div class="item">Item 80</div>
+            <div class="item">Item 81</div><div class="item">Item 82</div><div class="item">Item 83</div><div class="item">Item 84</div><div class="item">Item 85</div>
+            <div class="item">Item 86</div><div class="item">Item 87</div><div class="item">Item 88</div><div class="item">Item 89</div><div class="item">Item 90</div>
+            <div class="item">Item 91</div><div class="item">Item 92</div><div class="item">Item 93</div><div class="item">Item 94</div><div class="item">Item 95</div>
+            <div class="item">Item 96</div><div class="item">Item 97</div><div class="item">Item 98</div><div class="item">Item 99</div><div class="item">Item 100</div>
+            <div class="item">Item 101</div><div class="item">Item 102</div><div class="item">Item 103</div><div class="item">Item 104</div><div class="item">Item 105</div>
+            <div class="item">Item 106</div><div class="item">Item 107</div><div class="item">Item 108</div><div class="item">Item 109</div><div class="item">Item 110</div>
+            <div class="item">Item 111</div><div class="item">Item 112</div><div class="item">Item 113</div><div class="item">Item 114</div><div class="item">Item 115</div>
+            <div class="item">Item 116</div><div class="item">Item 117</div><div class="item">Item 118</div><div class="item">Item 119</div><div class="item">Item 120</div>
+            <div class="item">Item 121</div><div class="item">Item 122</div><div class="item">Item 123</div><div class="item">Item 124</div><div class="item">Item 125</div>
+            <div class="item">Item 126</div><div class="item">Item 127</div><div class="item">Item 128</div><div class="item">Item 129</div><div class="item">Item 130</div>
+            <div class="item">Item 131</div><div class="item">Item 132</div><div class="item">Item 133</div><div class="item">Item 134</div><div class="item">Item 135</div>
+            <div class="item">Item 136</div><div class="item">Item 137</div><div class="item">Item 138</div><div class="item">Item 139</div><div class="item">Item 140</div>
+            <div class="item">Item 141</div><div class="item">Item 142</div><div class="item">Item 143</div><div class="item">Item 144</div><div class="item">Item 145</div>
+            <div class="item">Item 146</div><div class="item">Item 147</div><div class="item">Item 148</div><div class="item">Item 149</div><div class="item">Item 150</div>
+            <div class="item">Item 151</div><div class="item">Item 152</div><div class="item">Item 153</div><div class="item">Item 154</div><div class="item">Item 155</div>
+            <div class="item">Item 156</div><div class="item">Item 157</div><div class="item">Item 158</div><div class="item">Item 159</div><div class="item">Item 160</div>
+            <div class="item">Item 161</div><div class="item">Item 162</div><div class="item">Item 163</div><div class="item">Item 164</div><div class="item">Item 165</div>
+            <div class="item">Item 166</div><div class="item">Item 167</div><div class="item">Item 168</div><div class="item">Item 169</div><div class="item">Item 170</div>
+            <div class="item">Item 171</div><div class="item">Item 172</div><div class="item">Item 173</div><div class="item">Item 174</div><div class="item">Item 175</div>
+            <div class="item">Item 176</div><div class="item">Item 177</div><div class="item">Item 178</div><div class="item">Item 179</div><div class="item">Item 180</div>
+            <div class="item">Item 181</div><div class="item">Item 182</div><div class="item">Item 183</div><div class="item">Item 184</div><div class="item">Item 185</div>
+            <div class="item">Item 186</div><div class="item">Item 187</div><div class="item">Item 188</div><div class="item">Item 189</div><div class="item">Item 190</div>
+            <div class="item">Item 191</div><div class="item">Item 192</div><div class="item">Item 193</div><div class="item">Item 194</div><div class="item">Item 195</div>
+            <div class="item">Item 196</div><div class="item">Item 197</div><div class="item">Item 198</div><div class="item">Item 199</div><div class="item">Item 200</div>
+        </section>
+        <!-- Section 3: 200 items -->
+        <section class="container" id="section3">
+            <h2>Section 3</h2>
+            <div class="item">Item 1</div><div class="item">Item 2</div><div class="item">Item 3</div><div class="item">Item 4</div><div class="item">Item 5</div>
+            <div class="item">Item 6</div><div class="item">Item 7</div><div class="item">Item 8</div><div class="item">Item 9</div><div class="item">Item 10</div>
+            <div class="item">Item 11</div><div class="item">Item 12</div><div class="item">Item 13</div><div class="item">Item 14</div><div class="item">Item 15</div>
+            <div class="item">Item 16</div><div class="item">Item 17</div><div class="item">Item 18</div><div class="item">Item 19</div><div class="item">Item 20</div>
+            <div class="item">Item 21</div><div class="item">Item 22</div><div class="item">Item 23</div><div class="item">Item 24</div><div class="item">Item 25</div>
+            <div class="item">Item 26</div><div class="item">Item 27</div><div class="item">Item 28</div><div class="item">Item 29</div><div class="item">Item 30</div>
+            <div class="item">Item 31</div><div class="item">Item 32</div><div class="item">Item 33</div><div class="item">Item 34</div><div class="item">Item 35</div>
+            <div class="item">Item 36</div><div class="item">Item 37</div><div class="item">Item 38</div><div class="item">Item 39</div><div class="item">Item 40</div>
+            <div class="item">Item 41</div><div class="item">Item 42</div><div class="item">Item 43</div><div class="item">Item 44</div><div class="item">Item 45</div>
+            <div class="item">Item 46</div><div class="item">Item 47</div><div class="item">Item 48</div><div class="item">Item 49</div><div class="item">Item 50</div>
+            <div class="item">Item 51</div><div class="item">Item 52</div><div class="item">Item 53</div><div class="item">Item 54</div><div class="item">Item 55</div>
+            <div class="item">Item 56</div><div class="item">Item 57</div><div class="item">Item 58</div><div class="item">Item 59</div><div class="item">Item 60</div>
+            <div class="item">Item 61</div><div class="item">Item 62</div><div class="item">Item 63</div><div class="item">Item 64</div><div class="item">Item 65</div>
+            <div class="item">Item 66</div><div class="item">Item 67</div><div class="item">Item 68</div><div class="item">Item 69</div><div class="item">Item 70</div>
+            <div class="item">Item 71</div><div class="item">Item 72</div><div class="item">Item 73</div><div class="item">Item 74</div><div class="item">Item 75</div>
+            <div class="item">Item 76</div><div class="item">Item 77</div><div class="item">Item 78</div><div class="item">Item 79</div><div class="item">Item 80</div>
+            <div class="item">Item 81</div><div class="item">Item 82</div><div class="item">Item 83</div><div class="item">Item 84</div><div class="item">Item 85</div>
+            <div class="item">Item 86</div><div class="item">Item 87</div><div class="item">Item 88</div><div class="item">Item 89</div><div class="item">Item 90</div>
+            <div class="item">Item 91</div><div class="item">Item 92</div><div class="item">Item 93</div><div class="item">Item 94</div><div class="item">Item 95</div>
+            <div class="item">Item 96</div><div class="item">Item 97</div><div class="item">Item 98</div><div class="item">Item 99</div><div class="item">Item 100</div>
+            <div class="item">Item 101</div><div class="item">Item 102</div><div class="item">Item 103</div><div class="item">Item 104</div><div class="item">Item 105</div>
+            <div class="item">Item 106</div><div class="item">Item 107</div><div class="item">Item 108</div><div class="item">Item 109</div><div class="item">Item 110</div>
+            <div class="item">Item 111</div><div class="item">Item 112</div><div class="item">Item 113</div><div class="item">Item 114</div><div class="item">Item 115</div>
+            <div class="item">Item 116</div><div class="item">Item 117</div><div class="item">Item 118</div><div class="item">Item 119</div><div class="item">Item 120</div>
+            <div class="item">Item 121</div><div class="item">Item 122</div><div class="item">Item 123</div><div class="item">Item 124</div><div class="item">Item 125</div>
+            <div class="item">Item 126</div><div class="item">Item 127</div><div class="item">Item 128</div><div class="item">Item 129</div><div class="item">Item 130</div>
+            <div class="item">Item 131</div><div class="item">Item 132</div><div class="item">Item 133</div><div class="item">Item 134</div><div class="item">Item 135</div>
+            <div class="item">Item 136</div><div class="item">Item 137</div><div class="item">Item 138</div><div class="item">Item 139</div><div class="item">Item 140</div>
+            <div class="item">Item 141</div><div class="item">Item 142</div><div class="item">Item 143</div><div class="item">Item 144</div><div class="item">Item 145</div>
+            <div class="item">Item 146</div><div class="item">Item 147</div><div class="item">Item 148</div><div class="item">Item 149</div><div class="item">Item 150</div>
+            <div class="item">Item 151</div><div class="item">Item 152</div><div class="item">Item 153</div><div class="item">Item 154</div><div class="item">Item 155</div>
+            <div class="item">Item 156</div><div class="item">Item 157</div><div class="item">Item 158</div><div class="item">Item 159</div><div class="item">Item 160</div>
+            <div class="item">Item 161</div><div class="item">Item 162</div><div class="item">Item 163</div><div class="item">Item 164</div><div class="item">Item 165</div>
+            <div class="item">Item 166</div><div class="item">Item 167</div><div class="item">Item 168</div><div class="item">Item 169</div><div class="item">Item 170</div>
+            <div class="item">Item 171</div><div class="item">Item 172</div><div class="item">Item 173</div><div class="item">Item 174</div><div class="item">Item 175</div>
+            <div class="item">Item 176</div><div class="item">Item 177</div><div class="item">Item 178</div><div class="item">Item 179</div><div class="item">Item 180</div>
+            <div class="item">Item 181</div><div class="item">Item 182</div><div class="item">Item 183</div><div class="item">Item 184</div><div class="item">Item 185</div>
+            <div class="item">Item 186</div><div class="item">Item 187</div><div class="item">Item 188</div><div class="item">Item 189</div><div class="item">Item 190</div>
+            <div class="item">Item 191</div><div class="item">Item 192</div><div class="item">Item 193</div><div class="item">Item 194</div><div class="item">Item 195</div>
+            <div class="item">Item 196</div><div class="item">Item 197</div><div class="item">Item 198</div><div class="item">Item 199</div><div class="item">Item 200</div>
+        </section>
+        <!-- Section 4: 200 items -->
+        <section class="container" id="section4">
+            <h2>Section 4</h2>
+            <div class="item">Item 1</div><div class="item">Item 2</div><div class="item">Item 3</div><div class="item">Item 4</div><div class="item">Item 5</div>
+            <div class="item">Item 6</div><div class="item">Item 7</div><div class="item">Item 8</div><div class="item">Item 9</div><div class="item">Item 10</div>
+            <div class="item">Item 11</div><div class="item">Item 12</div><div class="item">Item 13</div><div class="item">Item 14</div><div class="item">Item 15</div>
+            <div class="item">Item 16</div><div class="item">Item 17</div><div class="item">Item 18</div><div class="item">Item 19</div><div class="item">Item 20</div>
+            <div class="item">Item 21</div><div class="item">Item 22</div><div class="item">Item 23</div><div class="item">Item 24</div><div class="item">Item 25</div>
+            <div class="item">Item 26</div><div class="item">Item 27</div><div class="item">Item 28</div><div class="item">Item 29</div><div class="item">Item 30</div>
+            <div class="item">Item 31</div><div class="item">Item 32</div><div class="item">Item 33</div><div class="item">Item 34</div><div class="item">Item 35</div>
+            <div class="item">Item 36</div><div class="item">Item 37</div><div class="item">Item 38</div><div class="item">Item 39</div><div class="item">Item 40</div>
+            <div class="item">Item 41</div><div class="item">Item 42</div><div class="item">Item 43</div><div class="item">Item 44</div><div class="item">Item 45</div>
+            <div class="item">Item 46</div><div class="item">Item 47</div><div class="item">Item 48</div><div class="item">Item 49</div><div class="item">Item 50</div>
+            <div class="item">Item 51</div><div class="item">Item 52</div><div class="item">Item 53</div><div class="item">Item 54</div><div class="item">Item 55</div>
+            <div class="item">Item 56</div><div class="item">Item 57</div><div class="item">Item 58</div><div class="item">Item 59</div><div class="item">Item 60</div>
+            <div class="item">Item 61</div><div class="item">Item 62</div><div class="item">Item 63</div><div class="item">Item 64</div><div class="item">Item 65</div>
+            <div class="item">Item 66</div><div class="item">Item 67</div><div class="item">Item 68</div><div class="item">Item 69</div><div class="item">Item 70</div>
+            <div class="item">Item 71</div><div class="item">Item 72</div><div class="item">Item 73</div><div class="item">Item 74</div><div class="item">Item 75</div>
+            <div class="item">Item 76</div><div class="item">Item 77</div><div class="item">Item 78</div><div class="item">Item 79</div><div class="item">Item 80</div>
+            <div class="item">Item 81</div><div class="item">Item 82</div><div class="item">Item 83</div><div class="item">Item 84</div><div class="item">Item 85</div>
+            <div class="item">Item 86</div><div class="item">Item 87</div><div class="item">Item 88</div><div class="item">Item 89</div><div class="item">Item 90</div>
+            <div class="item">Item 91</div><div class="item">Item 92</div><div class="item">Item 93</div><div class="item">Item 94</div><div class="item">Item 95</div>
+            <div class="item">Item 96</div><div class="item">Item 97</div><div class="item">Item 98</div><div class="item">Item 99</div><div class="item">Item 100</div>
+            <div class="item">Item 101</div><div class="item">Item 102</div><div class="item">Item 103</div><div class="item">Item 104</div><div class="item">Item 105</div>
+            <div class="item">Item 106</div><div class="item">Item 107</div><div class="item">Item 108</div><div class="item">Item 109</div><div class="item">Item 110</div>
+            <div class="item">Item 111</div><div class="item">Item 112</div><div class="item">Item 113</div><div class="item">Item 114</div><div class="item">Item 115</div>
+            <div class="item">Item 116</div><div class="item">Item 117</div><div class="item">Item 118</div><div class="item">Item 119</div><div class="item">Item 120</div>
+            <div class="item">Item 121</div><div class="item">Item 122</div><div class="item">Item 123</div><div class="item">Item 124</div><div class="item">Item 125</div>
+            <div class="item">Item 126</div><div class="item">Item 127</div><div class="item">Item 128</div><div class="item">Item 129</div><div class="item">Item 130</div>
+            <div class="item">Item 131</div><div class="item">Item 132</div><div class="item">Item 133</div><div class="item">Item 134</div><div class="item">Item 135</div>
+            <div class="item">Item 136</div><div class="item">Item 137</div><div class="item">Item 138</div><div class="item">Item 139</div><div class="item">Item 140</div>
+            <div class="item">Item 141</div><div class="item">Item 142</div><div class="item">Item 143</div><div class="item">Item 144</div><div class="item">Item 145</div>
+            <div class="item">Item 146</div><div class="item">Item 147</div><div class="item">Item 148</div><div class="item">Item 149</div><div class="item">Item 150</div>
+            <div class="item">Item 151</div><div class="item">Item 152</div><div class="item">Item 153</div><div class="item">Item 154</div><div class="item">Item 155</div>
+            <div class="item">Item 156</div><div class="item">Item 157</div><div class="item">Item 158</div><div class="item">Item 159</div><div class="item">Item 160</div>
+            <div class="item">Item 161</div><div class="item">Item 162</div><div class="item">Item 163</div><div class="item">Item 164</div><div class="item">Item 165</div>
+            <div class="item">Item 166</div><div class="item">Item 167</div><div class="item">Item 168</div><div class="item">Item 169</div><div class="item">Item 170</div>
+            <div class="item">Item 171</div><div class="item">Item 172</div><div class="item">Item 173</div><div class="item">Item 174</div><div class="item">Item 175</div>
+            <div class="item">Item 176</div><div class="item">Item 177</div><div class="item">Item 178</div><div class="item">Item 179</div><div class="item">Item 180</div>
+            <div class="item">Item 181</div><div class="item">Item 182</div><div class="item">Item 183</div><div class="item">Item 184</div><div class="item">Item 185</div>
+            <div class="item">Item 186</div><div class="item">Item 187</div><div class="item">Item 188</div><div class="item">Item 189</div><div class="item">Item 190</div>
+            <div class="item">Item 191</div><div class="item">Item 192</div><div class="item">Item 193</div><div class="item">Item 194</div><div class="item">Item 195</div>
+            <div class="item">Item 196</div><div class="item">Item 197</div><div class="item">Item 198</div><div class="item">Item 199</div><div class="item">Item 200</div>
+        </section>
+        <!-- Section 5: 200 items -->
+        <section class="container" id="section5">
+            <h2>Section 5</h2>
+            <div class="item">Item 1</div><div class="item">Item 2</div><div class="item">Item 3</div><div class="item">Item 4</div><div class="item">Item 5</div>
+            <div class="item">Item 6</div><div class="item">Item 7</div><div class="item">Item 8</div><div class="item">Item 9</div><div class="item">Item 10</div>
+            <div class="item">Item 11</div><div class="item">Item 12</div><div class="item">Item 13</div><div class="item">Item 14</div><div class="item">Item 15</div>
+            <div class="item">Item 16</div><div class="item">Item 17</div><div class="item">Item 18</div><div class="item">Item 19</div><div class="item">Item 20</div>
+            <div class="item">Item 21</div><div class="item">Item 22</div><div class="item">Item 23</div><div class="item">Item 24</div><div class="item">Item 25</div>
+            <div class="item">Item 26</div><div class="item">Item 27</div><div class="item">Item 28</div><div class="item">Item 29</div><div class="item">Item 30</div>
+            <div class="item">Item 31</div><div class="item">Item 32</div><div class="item">Item 33</div><div class="item">Item 34</div><div class="item">Item 35</div>
+            <div class="item">Item 36</div><div class="item">Item 37</div><div class="item">Item 38</div><div class="item">Item 39</div><div class="item">Item 40</div>
+            <div class="item">Item 41</div><div class="item">Item 42</div><div class="item">Item 43</div><div class="item">Item 44</div><div class="item">Item 45</div>
+            <div class="item">Item 46</div><div class="item">Item 47</div><div class="item">Item 48</div><div class="item">Item 49</div><div class="item">Item 50</div>
+            <div class="item">Item 51</div><div class="item">Item 52</div><div class="item">Item 53</div><div class="item">Item 54</div><div class="item">Item 55</div>
+            <div class="item">Item 56</div><div class="item">Item 57</div><div class="item">Item 58</div><div class="item">Item 59</div><div class="item">Item 60</div>
+            <div class="item">Item 61</div><div class="item">Item 62</div><div class="item">Item 63</div><div class="item">Item 64</div><div class="item">Item 65</div>
+            <div class="item">Item 66</div><div class="item">Item 67</div><div class="item">Item 68</div><div class="item">Item 69</div><div class="item">Item 70</div>
+            <div class="item">Item 71</div><div class="item">Item 72</div><div class="item">Item 73</div><div class="item">Item 74</div><div class="item">Item 75</div>
+            <div class="item">Item 76</div><div class="item">Item 77</div><div class="item">Item 78</div><div class="item">Item 79</div><div class="item">Item 80</div>
+            <div class="item">Item 81</div><div class="item">Item 82</div><div class="item">Item 83</div><div class="item">Item 84</div><div class="item">Item 85</div>
+            <div class="item">Item 86</div><div class="item">Item 87</div><div class="item">Item 88</div><div class="item">Item 89</div><div class="item">Item 90</div>
+            <div class="item">Item 91</div><div class="item">Item 92</div><div class="item">Item 93</div><div class="item">Item 94</div><div class="item">Item 95</div>
+            <div class="item">Item 96</div><div class="item">Item 97</div><div class="item">Item 98</div><div class="item">Item 99</div><div class="item">Item 100</div>
+            <div class="item">Item 101</div><div class="item">Item 102</div><div class="item">Item 103</div><div class="item">Item 104</div><div class="item">Item 105</div>
+            <div class="item">Item 106</div><div class="item">Item 107</div><div class="item">Item 108</div><div class="item">Item 109</div><div class="item">Item 110</div>
+            <div class="item">Item 111</div><div class="item">Item 112</div><div class="item">Item 113</div><div class="item">Item 114</div><div class="item">Item 115</div>
+            <div class="item">Item 116</div><div class="item">Item 117</div><div class="item">Item 118</div><div class="item">Item 119</div><div class="item">Item 120</div>
+            <div class="item">Item 121</div><div class="item">Item 122</div><div class="item">Item 123</div><div class="item">Item 124</div><div class="item">Item 125</div>
+            <div class="item">Item 126</div><div class="item">Item 127</div><div class="item">Item 128</div><div class="item">Item 129</div><div class="item">Item 130</div>
+            <div class="item">Item 131</div><div class="item">Item 132</div><div class="item">Item 133</div><div class="item">Item 134</div><div class="item">Item 135</div>
+            <div class="item">Item 136</div><div class="item">Item 137</div><div class="item">Item 138</div><div class="item">Item 139</div><div class="item">Item 140</div>
+            <div class="item">Item 141</div><div class="item">Item 142</div><div class="item">Item 143</div><div class="item">Item 144</div><div class="item">Item 145</div>
+            <div class="item">Item 146</div><div class="item">Item 147</div><div class="item">Item 148</div><div class="item">Item 149</div><div class="item">Item 150</div>
+            <div class="item">Item 151</div><div class="item">Item 152</div><div class="item">Item 153</div><div class="item">Item 154</div><div class="item">Item 155</div>
+            <div class="item">Item 156</div><div class="item">Item 157</div><div class="item">Item 158</div><div class="item">Item 159</div><div class="item">Item 160</div>
+            <div class="item">Item 161</div><div class="item">Item 162</div><div class="item">Item 163</div><div class="item">Item 164</div><div class="item">Item 165</div>
+            <div class="item">Item 166</div><div class="item">Item 167</div><div class="item">Item 168</div><div class="item">Item 169</div><div class="item">Item 170</div>
+            <div class="item">Item 171</div><div class="item">Item 172</div><div class="item">Item 173</div><div class="item">Item 174</div><div class="item">Item 175</div>
+            <div class="item">Item 176</div><div class="item">Item 177</div><div class="item">Item 178</div><div class="item">Item 179</div><div class="item">Item 180</div>
+            <div class="item">Item 181</div><div class="item">Item 182</div><div class="item">Item 183</div><div class="item">Item 184</div><div class="item">Item 185</div>
+            <div class="item">Item 186</div><div class="item">Item 187</div><div class="item">Item 188</div><div class="item">Item 189</div><div class="item">Item 190</div>
+            <div class="item">Item 191</div><div class="item">Item 192</div><div class="item">Item 193</div><div class="item">Item 194</div><div class="item">Item 195</div>
+            <div class="item">Item 196</div><div class="item">Item 197</div><div class="item">Item 198</div><div class="item">Item 199</div><div class="item">Item 200</div>
+        </section>
+    </main>
+    <footer>
+        <p>Total: 1000+ elements for performance testing</p>
+    </footer>
+</body>
+</html>
