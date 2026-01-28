@@ -965,6 +965,160 @@
             display: none;
         }
 
+        /* === RESIZE HANDLES OVERLAY === */
+        .resize-overlay {
+            position: absolute;
+            pointer-events: none;
+            z-index: 1000;
+            display: none;
+        }
+
+        .resize-overlay.active {
+            display: block;
+        }
+
+        .resize-box {
+            position: absolute;
+            border: 2px solid var(--accent-500);
+            pointer-events: none;
+            box-shadow: 0 0 0 1px rgba(0, 0, 0, 0.1);
+        }
+
+        .resize-box.constrained {
+            border-style: dashed;
+            border-color: var(--warning-500);
+        }
+
+        .resize-handle {
+            position: absolute;
+            width: 10px;
+            height: 10px;
+            background: white;
+            border: 2px solid var(--accent-500);
+            border-radius: 2px;
+            pointer-events: all;
+            z-index: 10;
+            transition: transform var(--transition-fast), background var(--transition-fast);
+        }
+
+        .resize-handle:hover {
+            transform: scale(1.2);
+            background: var(--accent-100);
+        }
+
+        .resize-handle:active {
+            background: var(--accent-200);
+        }
+
+        .resize-handle.constrained {
+            border-color: var(--warning-500);
+            background: var(--warning-500);
+            opacity: 0.6;
+            cursor: not-allowed;
+        }
+
+        /* Corner handles */
+        .resize-handle.nw { top: -5px; left: -5px; cursor: nwse-resize; }
+        .resize-handle.n { top: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+        .resize-handle.ne { top: -5px; right: -5px; cursor: nesw-resize; }
+        .resize-handle.e { top: 50%; right: -5px; transform: translateY(-50%); cursor: ew-resize; }
+        .resize-handle.se { bottom: -5px; right: -5px; cursor: nwse-resize; }
+        .resize-handle.s { bottom: -5px; left: 50%; transform: translateX(-50%); cursor: ns-resize; }
+        .resize-handle.sw { bottom: -5px; left: -5px; cursor: nesw-resize; }
+        .resize-handle.w { top: 50%; left: -5px; transform: translateY(-50%); cursor: ew-resize; }
+
+        .resize-handle.n:hover, .resize-handle.s:hover { transform: translateX(-50%) scale(1.2); }
+        .resize-handle.e:hover, .resize-handle.w:hover { transform: translateY(-50%) scale(1.2); }
+
+        /* Dimension label */
+        .resize-dimensions {
+            position: absolute;
+            bottom: -28px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--gray-900);
+            color: white;
+            font-size: var(--text-xs);
+            font-family: var(--font-mono);
+            padding: 4px 8px;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            pointer-events: none;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .resize-overlay.resizing .resize-dimensions,
+        .resize-overlay.moving .resize-dimensions {
+            opacity: 1;
+        }
+
+        /* Constraint tooltip */
+        .constraint-tooltip {
+            position: absolute;
+            top: -36px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: var(--warning-500);
+            color: var(--gray-900);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            padding: 4px 10px;
+            border-radius: var(--radius-sm);
+            white-space: nowrap;
+            pointer-events: all;
+            cursor: pointer;
+            box-shadow: var(--shadow-md);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .constraint-tooltip::after {
+            content: '';
+            position: absolute;
+            bottom: -4px;
+            left: 50%;
+            transform: translateX(-50%);
+            border: 4px solid transparent;
+            border-top-color: var(--warning-500);
+        }
+
+        .resize-box.constrained:hover .constraint-tooltip {
+            opacity: 1;
+        }
+
+        /* Move cursor for positioned elements */
+        .resize-box.movable {
+            cursor: move;
+            pointer-events: all;
+        }
+
+        .resize-box.static-element {
+            cursor: default;
+        }
+
+        /* Position hint for static elements */
+        .position-hint {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.8);
+            color: white;
+            font-size: var(--text-xs);
+            padding: 6px 12px;
+            border-radius: var(--radius-md);
+            white-space: nowrap;
+            pointer-events: none;
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .resize-box.static-element:hover .position-hint {
+            opacity: 0.9;
+        }
+
         /* === WELCOME SCREEN === */
         .welcome-screen {
             position: absolute;
@@ -1700,6 +1854,22 @@
                                 <svg id="grid-svg"></svg>
                             </div>
                             <div id="guide-container"></div>
+                            <!-- Resize Handles Overlay -->
+                            <div class="resize-overlay" id="resize-overlay">
+                                <div class="resize-box" id="resize-box">
+                                    <div class="resize-handle nw" data-handle="nw"></div>
+                                    <div class="resize-handle n" data-handle="n"></div>
+                                    <div class="resize-handle ne" data-handle="ne"></div>
+                                    <div class="resize-handle e" data-handle="e"></div>
+                                    <div class="resize-handle se" data-handle="se"></div>
+                                    <div class="resize-handle s" data-handle="s"></div>
+                                    <div class="resize-handle sw" data-handle="sw"></div>
+                                    <div class="resize-handle w" data-handle="w"></div>
+                                    <div class="resize-dimensions" id="resize-dimensions"></div>
+                                    <div class="constraint-tooltip" id="constraint-tooltip">Size controlled by parent</div>
+                                    <div class="position-hint" id="position-hint">Set position to move freely</div>
+                                </div>
+                            </div>
                         </div>
                     </div>
                 </div>
@@ -1923,7 +2093,20 @@
                 tablet: { width: 768, height: 1024 },
                 desktop: { width: 1200, height: 800 },
                 fullwidth: { width: 800, height: 600 }
-            }
+            },
+            // Resize/Move state
+            isResizing: false,
+            isMoving: false,
+            resizeHandle: null,
+            resizeStartX: 0,
+            resizeStartY: 0,
+            resizeStartWidth: 0,
+            resizeStartHeight: 0,
+            resizeStartLeft: 0,
+            resizeStartTop: 0,
+            resizeAspectRatio: 1,
+            resizeShiftKey: false,
+            elementConstraints: null
         };
 
         // =========================================================================
@@ -1990,7 +2173,13 @@
             propHeight: document.getElementById('prop-height'),
             textContentRow: document.getElementById('text-content-row'),
             toastContainer: document.getElementById('toast-container'),
-            contextMenu: document.getElementById('context-menu')
+            contextMenu: document.getElementById('context-menu'),
+            // Resize overlay elements
+            resizeOverlay: document.getElementById('resize-overlay'),
+            resizeBox: document.getElementById('resize-box'),
+            resizeDimensions: document.getElementById('resize-dimensions'),
+            constraintTooltip: document.getElementById('constraint-tooltip'),
+            positionHint: document.getElementById('position-hint')
         };
 
         // =========================================================================
@@ -2649,6 +2838,9 @@
             elements.canvasTransform.style.transform =
                 `translate(${state.panX}px, ${state.panY}px) scale(${state.zoom})`;
             elements.zoomLevel.textContent = Math.round(state.zoom * 100) + '%';
+
+            // Update resize overlay position after zoom/pan
+            requestAnimationFrame(updateResizeOverlay);
         }
 
         function zoomTo(newZoom, centerX, centerY) {
@@ -3649,6 +3841,9 @@
 
             elements.noSelection.style.display = 'block';
             elements.propertySections.style.display = 'none';
+
+            // Hide resize overlay
+            elements.resizeOverlay.classList.remove('active');
         }
 
         // =========================================================================
@@ -3911,6 +4106,9 @@
 
             elements.propWidth.value = element.style.width || 'auto';
             elements.propHeight.value = element.style.height || 'auto';
+
+            // Update resize overlay
+            updateResizeOverlay();
         }
 
         function rgbToHex(rgb) {
@@ -3937,6 +4135,354 @@
             } else {
                 state.selectedElement.style[property] = value;
             }
+        }
+
+        // =========================================================================
+        // Resize & Move System
+        // =========================================================================
+
+        function detectElementConstraints(element) {
+            const doc = element.ownerDocument;
+            const computed = doc.defaultView.getComputedStyle(element);
+            const parent = element.parentElement;
+            const parentComputed = parent ? doc.defaultView.getComputedStyle(parent) : null;
+
+            const constraints = {
+                isConstrained: false,
+                constraintReason: null,
+                isFlexChild: false,
+                isGridChild: false,
+                hasAutoWidth: false,
+                hasAutoHeight: false,
+                isPositioned: false,
+                positionType: computed.position
+            };
+
+            // Check if parent is flex or grid
+            if (parentComputed) {
+                if (parentComputed.display === 'flex' || parentComputed.display === 'inline-flex') {
+                    constraints.isFlexChild = true;
+                    constraints.isConstrained = true;
+                    constraints.constraintReason = 'Flex child - size controlled by parent';
+                }
+                if (parentComputed.display === 'grid' || parentComputed.display === 'inline-grid') {
+                    constraints.isGridChild = true;
+                    constraints.isConstrained = true;
+                    constraints.constraintReason = 'Grid child - size controlled by parent';
+                }
+            }
+
+            // Check for auto sizing
+            const inlineWidth = element.style.width;
+            const inlineHeight = element.style.height;
+
+            if (!inlineWidth || inlineWidth === 'auto' || inlineWidth === '') {
+                constraints.hasAutoWidth = true;
+            }
+            if (!inlineHeight || inlineHeight === 'auto' || inlineHeight === '') {
+                constraints.hasAutoHeight = true;
+            }
+
+            // If both auto and constrained, that's a constraint
+            if ((constraints.hasAutoWidth || constraints.hasAutoHeight) &&
+                (constraints.isFlexChild || constraints.isGridChild)) {
+                constraints.isConstrained = true;
+            }
+
+            // Check position for movability
+            const position = computed.position;
+            constraints.isPositioned = (position === 'absolute' || position === 'relative' || position === 'fixed');
+
+            return constraints;
+        }
+
+        function updateResizeOverlay() {
+            if (!state.selectedElement || state.previewMode || state.selectedElements.length > 1) {
+                elements.resizeOverlay.classList.remove('active');
+                return;
+            }
+
+            const element = state.selectedElement;
+            const frameRect = elements.previewFrame.getBoundingClientRect();
+            const canvasRect = elements.canvasWrapper.getBoundingClientRect();
+
+            // Get element rect relative to iframe content
+            const elementRect = element.getBoundingClientRect();
+
+            // Calculate position relative to canvas wrapper
+            const left = (elementRect.left - frameRect.left) * state.zoom +
+                        (frameRect.left - canvasRect.left);
+            const top = (elementRect.top - frameRect.top) * state.zoom +
+                       (frameRect.top - canvasRect.top);
+            const width = elementRect.width * state.zoom;
+            const height = elementRect.height * state.zoom;
+
+            // Update overlay position
+            elements.resizeOverlay.style.left = left + 'px';
+            elements.resizeOverlay.style.top = top + 'px';
+
+            elements.resizeBox.style.width = width + 'px';
+            elements.resizeBox.style.height = height + 'px';
+
+            // Detect constraints
+            state.elementConstraints = detectElementConstraints(element);
+
+            // Update constrained state
+            if (state.elementConstraints.isConstrained) {
+                elements.resizeBox.classList.add('constrained');
+                elements.constraintTooltip.textContent = state.elementConstraints.constraintReason || 'Size controlled by parent';
+            } else {
+                elements.resizeBox.classList.remove('constrained');
+            }
+
+            // Update movable state
+            if (state.elementConstraints.isPositioned) {
+                elements.resizeBox.classList.add('movable');
+                elements.resizeBox.classList.remove('static-element');
+                elements.positionHint.style.display = 'none';
+            } else {
+                elements.resizeBox.classList.remove('movable');
+                elements.resizeBox.classList.add('static-element');
+            }
+
+            // Update dimensions display
+            const actualWidth = Math.round(elementRect.width);
+            const actualHeight = Math.round(elementRect.height);
+            elements.resizeDimensions.textContent = actualWidth + ' × ' + actualHeight;
+
+            elements.resizeOverlay.classList.add('active');
+        }
+
+        function startResize(e, handle) {
+            if (state.elementConstraints?.isConstrained && !e.altKey) {
+                showToast('Element size is controlled by parent layout', 'warning');
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const element = state.selectedElement;
+            const rect = element.getBoundingClientRect();
+
+            state.isResizing = true;
+            state.resizeHandle = handle;
+            state.resizeStartX = e.clientX;
+            state.resizeStartY = e.clientY;
+            state.resizeStartWidth = rect.width;
+            state.resizeStartHeight = rect.height;
+            state.resizeStartLeft = parseFloat(element.style.left) || 0;
+            state.resizeStartTop = parseFloat(element.style.top) || 0;
+            state.resizeAspectRatio = rect.width / rect.height;
+            state.resizeShiftKey = e.shiftKey;
+
+            elements.resizeOverlay.classList.add('resizing');
+            document.body.style.cursor = getComputedStyle(e.target).cursor;
+
+            saveState();
+        }
+
+        function doResize(e) {
+            if (!state.isResizing || !state.selectedElement) return;
+
+            const element = state.selectedElement;
+            const deltaX = (e.clientX - state.resizeStartX) / state.zoom;
+            const deltaY = (e.clientY - state.resizeStartY) / state.zoom;
+
+            let newWidth = state.resizeStartWidth;
+            let newHeight = state.resizeStartHeight;
+            let newLeft = state.resizeStartLeft;
+            let newTop = state.resizeStartTop;
+
+            const handle = state.resizeHandle;
+
+            // Calculate new dimensions based on handle
+            if (handle.includes('e')) {
+                newWidth = Math.max(20, state.resizeStartWidth + deltaX);
+            }
+            if (handle.includes('w')) {
+                newWidth = Math.max(20, state.resizeStartWidth - deltaX);
+                if (state.elementConstraints?.isPositioned) {
+                    newLeft = state.resizeStartLeft + deltaX;
+                }
+            }
+            if (handle.includes('s')) {
+                newHeight = Math.max(20, state.resizeStartHeight + deltaY);
+            }
+            if (handle.includes('n')) {
+                newHeight = Math.max(20, state.resizeStartHeight - deltaY);
+                if (state.elementConstraints?.isPositioned) {
+                    newTop = state.resizeStartTop + deltaY;
+                }
+            }
+
+            // Maintain aspect ratio if shift is held
+            if (e.shiftKey) {
+                if (handle === 'e' || handle === 'w') {
+                    newHeight = newWidth / state.resizeAspectRatio;
+                } else if (handle === 'n' || handle === 's') {
+                    newWidth = newHeight * state.resizeAspectRatio;
+                } else {
+                    // Corner handles - use the larger change
+                    const widthRatio = newWidth / state.resizeStartWidth;
+                    const heightRatio = newHeight / state.resizeStartHeight;
+                    if (widthRatio > heightRatio) {
+                        newHeight = newWidth / state.resizeAspectRatio;
+                    } else {
+                        newWidth = newHeight * state.resizeAspectRatio;
+                    }
+                }
+            }
+
+            // Apply dimensions
+            element.style.width = Math.round(newWidth) + 'px';
+            element.style.height = Math.round(newHeight) + 'px';
+
+            if (state.elementConstraints?.isPositioned && (handle.includes('w') || handle.includes('n'))) {
+                element.style.left = Math.round(newLeft) + 'px';
+                element.style.top = Math.round(newTop) + 'px';
+            }
+
+            // Update dimension display
+            elements.resizeDimensions.textContent = Math.round(newWidth) + ' × ' + Math.round(newHeight);
+
+            // Update overlay position
+            updateResizeOverlay();
+        }
+
+        function endResize() {
+            if (!state.isResizing) return;
+
+            state.isResizing = false;
+            state.resizeHandle = null;
+            elements.resizeOverlay.classList.remove('resizing');
+            document.body.style.cursor = '';
+
+            // Refresh properties panel
+            if (state.selectedElement) {
+                showProperties(state.selectedElement);
+            }
+        }
+
+        function startMove(e) {
+            if (!state.selectedElement) return;
+
+            const constraints = state.elementConstraints;
+
+            if (!constraints?.isPositioned) {
+                // Show hint for static elements
+                elements.positionHint.style.opacity = '1';
+                setTimeout(() => {
+                    elements.positionHint.style.opacity = '0';
+                }, 2000);
+                return;
+            }
+
+            e.preventDefault();
+            e.stopPropagation();
+
+            const element = state.selectedElement;
+            const computed = element.ownerDocument.defaultView.getComputedStyle(element);
+
+            state.isMoving = true;
+            state.resizeStartX = e.clientX;
+            state.resizeStartY = e.clientY;
+            state.resizeStartLeft = parseFloat(computed.left) || 0;
+            state.resizeStartTop = parseFloat(computed.top) || 0;
+
+            elements.resizeOverlay.classList.add('moving');
+            document.body.style.cursor = 'move';
+
+            saveState();
+        }
+
+        function doMove(e) {
+            if (!state.isMoving || !state.selectedElement) return;
+
+            const element = state.selectedElement;
+            const deltaX = (e.clientX - state.resizeStartX) / state.zoom;
+            const deltaY = (e.clientY - state.resizeStartY) / state.zoom;
+
+            const newLeft = state.resizeStartLeft + deltaX;
+            const newTop = state.resizeStartTop + deltaY;
+
+            element.style.left = Math.round(newLeft) + 'px';
+            element.style.top = Math.round(newTop) + 'px';
+
+            // Update dimension display to show position
+            elements.resizeDimensions.textContent = 'x: ' + Math.round(newLeft) + ', y: ' + Math.round(newTop);
+
+            updateResizeOverlay();
+        }
+
+        function endMove() {
+            if (!state.isMoving) return;
+
+            state.isMoving = false;
+            elements.resizeOverlay.classList.remove('moving');
+            document.body.style.cursor = '';
+
+            if (state.selectedElement) {
+                showProperties(state.selectedElement);
+            }
+        }
+
+        function selectParentElement() {
+            if (!state.selectedElement || !state.selectedPath || state.selectedPath.length <= 1) {
+                showToast('No parent element to select', 'info');
+                return;
+            }
+
+            const parentPath = state.selectedPath.slice(0, -1);
+            selectElementByPath(parentPath);
+        }
+
+        // Initialize resize overlay event listeners
+        function initResizeOverlay() {
+            // Handle resize handle drag
+            elements.resizeBox.querySelectorAll('.resize-handle').forEach(handle => {
+                handle.addEventListener('mousedown', (e) => {
+                    startResize(e, handle.dataset.handle);
+                });
+            });
+
+            // Handle element body drag for moving
+            elements.resizeBox.addEventListener('mousedown', (e) => {
+                // Only if clicking on the box itself, not handles
+                if (e.target === elements.resizeBox && state.elementConstraints?.isPositioned) {
+                    startMove(e);
+                } else if (e.target === elements.resizeBox && !state.elementConstraints?.isPositioned) {
+                    // Show position hint for static elements
+                    elements.positionHint.style.opacity = '1';
+                    setTimeout(() => {
+                        elements.positionHint.style.opacity = '0';
+                    }, 2000);
+                }
+            });
+
+            // Handle constraint tooltip click
+            elements.constraintTooltip.addEventListener('click', (e) => {
+                e.stopPropagation();
+                selectParentElement();
+            });
+
+            // Global mouse move/up for resize and move
+            document.addEventListener('mousemove', (e) => {
+                if (state.isResizing) {
+                    doResize(e);
+                } else if (state.isMoving) {
+                    doMove(e);
+                }
+            });
+
+            document.addEventListener('mouseup', () => {
+                endResize();
+                endMove();
+            });
+
+            // Update overlay on scroll/resize
+            elements.canvasViewport.addEventListener('scroll', updateResizeOverlay);
+            window.addEventListener('resize', debounce(updateResizeOverlay, 100));
         }
 
         // =========================================================================
@@ -4204,6 +4750,9 @@
 
         // Viewport selector
         initViewportSelector();
+
+        // Resize overlay
+        initResizeOverlay();
 
         // Initialize transform
         updateTransform();
