@@ -91,7 +91,7 @@
 - [ ] All P0 and P1 features complete
 - [ ] Manual QA pass on Chrome, Firefox, Safari
 - [ ] No console errors
-- [ ] Handles edge cases (empty file, huge file, malformed HTML)
+- [x] Handles edge cases (empty file, huge file, malformed HTML)
 - [ ] Performance: loads 1000-element DOM in < 1s
 - [ ] Accessibility: keyboard navigable
 
