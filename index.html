@@ -234,6 +234,95 @@
             border-bottom: 1px solid var(--border);
         }
 
+        .tree-search {
+            padding: 8px 12px;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .tree-search-input {
+            width: 100%;
+            padding: 8px 12px;
+            padding-left: 32px;
+            background: var(--bg-dark);
+            border: 1px solid var(--border);
+            border-radius: 6px;
+            color: var(--text);
+            font-size: 13px;
+            outline: none;
+            transition: border-color 0.2s;
+        }
+
+        .tree-search-input:focus {
+            border-color: var(--accent);
+        }
+
+        .tree-search-input::placeholder {
+            color: var(--text-secondary);
+        }
+
+        .tree-search-wrapper {
+            position: relative;
+        }
+
+        .tree-search-icon {
+            position: absolute;
+            left: 10px;
+            top: 50%;
+            transform: translateY(-50%);
+            color: var(--text-secondary);
+            font-size: 14px;
+            pointer-events: none;
+        }
+
+        .tree-search-clear {
+            position: absolute;
+            right: 8px;
+            top: 50%;
+            transform: translateY(-50%);
+            background: none;
+            border: none;
+            color: var(--text-secondary);
+            cursor: pointer;
+            padding: 2px 6px;
+            font-size: 14px;
+            display: none;
+        }
+
+        .tree-search-clear:hover {
+            color: var(--text);
+        }
+
+        .tree-search-wrapper.has-value .tree-search-clear {
+            display: block;
+        }
+
+        .tree-node.search-hidden {
+            display: none;
+        }
+
+        .tree-node.search-match {
+            background: rgba(0, 120, 212, 0.15);
+        }
+
+        .tree-node.search-match .tree-node-highlight {
+            background: var(--accent);
+            color: white;
+            padding: 0 2px;
+            border-radius: 2px;
+        }
+
+        .tree-search-count {
+            font-size: 11px;
+            color: var(--text-secondary);
+            padding: 4px 12px;
+            border-bottom: 1px solid var(--border);
+            display: none;
+        }
+
+        .tree-search-count.visible {
+            display: block;
+        }
+
         .element-tree {
             position: relative;
             height: calc(100vh - 98px);
@@ -358,6 +447,55 @@
             background: white;
             box-shadow: 0 4px 20px var(--shadow);
             position: relative;
+        }
+
+        /* Grid Overlay */
+        .grid-overlay {
+            position: absolute;
+            inset: 0;
+            pointer-events: none;
+            z-index: 1000;
+            opacity: 0;
+            transition: opacity 0.2s;
+        }
+
+        .grid-overlay.visible {
+            opacity: 1;
+        }
+
+        .grid-overlay svg {
+            width: 100%;
+            height: 100%;
+        }
+
+        /* Alignment Guide Lines */
+        .guide-line {
+            position: absolute;
+            background: #ff4081;
+            pointer-events: none;
+            z-index: 1001;
+        }
+
+        .guide-line.horizontal {
+            height: 1px;
+            left: 0;
+            right: 0;
+        }
+
+        .guide-line.vertical {
+            width: 1px;
+            top: 0;
+            bottom: 0;
+        }
+
+        .guide-line.center {
+            background: #00bcd4;
+        }
+
+        /* Grid toggle button active state */
+        .btn.grid-active {
+            background: var(--accent);
+            border-color: var(--accent);
         }
 
         .canvas-wrapper iframe {
@@ -862,6 +1000,7 @@
                 <span class="zoom-level" id="zoom-level" title="Click to reset to 100%">100%</span>
                 <button class="btn btn-icon" id="btn-zoom-in" title="Zoom In (+)">+</button>
                 <button class="btn" id="btn-fit" title="Fit to Screen (Ctrl+0)">Fit</button>
+                <button class="btn btn-icon" id="btn-grid" title="Toggle Grid (G)">⊞</button>
             </div>
 
             <div class="toolbar-section" style="margin-left: auto;">
@@ -877,6 +1016,14 @@
         <!-- Element Tree -->
         <aside class="sidebar-left">
             <div class="sidebar-header">Elements</div>
+            <div class="tree-search">
+                <div class="tree-search-wrapper" id="tree-search-wrapper">
+                    <span class="tree-search-icon">🔍</span>
+                    <input type="text" class="tree-search-input" id="tree-search-input" placeholder="Search elements...">
+                    <button class="tree-search-clear" id="tree-search-clear">×</button>
+                </div>
+            </div>
+            <div class="tree-search-count" id="tree-search-count"></div>
             <div class="element-tree" id="element-tree">
                 <div class="no-selection">Load an HTML file to see elements</div>
             </div>
@@ -933,6 +1080,10 @@
                 <div class="canvas-transform" id="canvas-transform">
                     <div class="canvas-wrapper hidden" id="canvas-wrapper">
                         <iframe id="preview-frame" width="800" height="600"></iframe>
+                        <div class="grid-overlay" id="grid-overlay">
+                            <svg id="grid-svg"></svg>
+                        </div>
+                        <div id="guide-container"></div>
                     </div>
                 </div>
             </div>
@@ -1140,7 +1291,12 @@
             visibleTreeStart: 0,
             visibleTreeEnd: 0,
             treeItemHeight: 25,
-            treeBuffer: 10
+            treeBuffer: 10,
+            // Grid and guides state
+            gridVisible: false,
+            gridSize: 20,
+            snapThreshold: 8,
+            guides: []
         };
 
         // =========================================================================
@@ -1170,7 +1326,15 @@
             canvasTransform: document.getElementById('canvas-transform'),
             canvasWrapper: document.getElementById('canvas-wrapper'),
             previewFrame: document.getElementById('preview-frame'),
+            gridOverlay: document.getElementById('grid-overlay'),
+            gridSvg: document.getElementById('grid-svg'),
+            guideContainer: document.getElementById('guide-container'),
+            btnGrid: document.getElementById('btn-grid'),
             elementTree: document.getElementById('element-tree'),
+            treeSearchInput: document.getElementById('tree-search-input'),
+            treeSearchWrapper: document.getElementById('tree-search-wrapper'),
+            treeSearchClear: document.getElementById('tree-search-clear'),
+            treeSearchCount: document.getElementById('tree-search-count'),
             propertiesPanel: document.getElementById('properties-panel'),
             noSelection: document.getElementById('no-selection'),
             propertySections: document.getElementById('property-sections'),
@@ -1252,6 +1416,167 @@
         function toggleTheme() {
             const currentTheme = document.documentElement.getAttribute('data-theme');
             setTheme(currentTheme === 'light' ? 'dark' : 'light');
+        }
+
+        // =========================================================================
+        // Grid and Alignment Guides
+        // =========================================================================
+
+        function toggleGrid() {
+            state.gridVisible = !state.gridVisible;
+            elements.gridOverlay.classList.toggle('visible', state.gridVisible);
+            elements.btnGrid.classList.toggle('grid-active', state.gridVisible);
+
+            if (state.gridVisible) {
+                renderGrid();
+            }
+        }
+
+        function renderGrid() {
+            const width = parseInt(elements.previewFrame.width) || 800;
+            const height = parseInt(elements.previewFrame.height) || 600;
+            const size = state.gridSize;
+
+            let pathD = '';
+
+            // Vertical lines
+            for (let x = size; x < width; x += size) {
+                pathD += `M ${x} 0 V ${height} `;
+            }
+
+            // Horizontal lines
+            for (let y = size; y < height; y += size) {
+                pathD += `M 0 ${y} H ${width} `;
+            }
+
+            elements.gridSvg.innerHTML = `
+                <defs>
+                    <pattern id="grid-pattern" width="${size}" height="${size}" patternUnits="userSpaceOnUse">
+                        <path d="M ${size} 0 L 0 0 0 ${size}" fill="none" stroke="rgba(128, 128, 128, 0.3)" stroke-width="0.5"/>
+                    </pattern>
+                </defs>
+                <rect width="100%" height="100%" fill="url(#grid-pattern)"/>
+            `;
+        }
+
+        function showAlignmentGuides(element) {
+            if (!element || !state.documentLoaded) return;
+
+            clearGuides();
+
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            const frameRect = frame.getBoundingClientRect();
+
+            const elemRect = element.getBoundingClientRect();
+            const elemCenter = {
+                x: elemRect.left + elemRect.width / 2 - frameRect.left,
+                y: elemRect.top + elemRect.height / 2 - frameRect.top
+            };
+            const elemEdges = {
+                left: elemRect.left - frameRect.left,
+                right: elemRect.right - frameRect.left,
+                top: elemRect.top - frameRect.top,
+                bottom: elemRect.bottom - frameRect.top
+            };
+
+            const threshold = state.snapThreshold / state.zoom;
+            const guides = [];
+
+            // Check alignment with other elements
+            const allElements = doc.body.querySelectorAll('*:not(script):not(style)');
+
+            allElements.forEach(other => {
+                if (other === element || other.contains(element) || element.contains(other)) return;
+                if (other.classList.contains('editor-selected') || other.classList.contains('editor-hover')) return;
+
+                const otherRect = other.getBoundingClientRect();
+                if (otherRect.width === 0 || otherRect.height === 0) return;
+
+                const otherCenter = {
+                    x: otherRect.left + otherRect.width / 2 - frameRect.left,
+                    y: otherRect.top + otherRect.height / 2 - frameRect.top
+                };
+                const otherEdges = {
+                    left: otherRect.left - frameRect.left,
+                    right: otherRect.right - frameRect.left,
+                    top: otherRect.top - frameRect.top,
+                    bottom: otherRect.bottom - frameRect.top
+                };
+
+                // Horizontal alignment (vertical guide lines)
+                // Left edge alignment
+                if (Math.abs(elemEdges.left - otherEdges.left) < threshold) {
+                    guides.push({ type: 'vertical', pos: otherEdges.left, isCenter: false });
+                }
+                // Right edge alignment
+                if (Math.abs(elemEdges.right - otherEdges.right) < threshold) {
+                    guides.push({ type: 'vertical', pos: otherEdges.right, isCenter: false });
+                }
+                // Left to right alignment
+                if (Math.abs(elemEdges.left - otherEdges.right) < threshold) {
+                    guides.push({ type: 'vertical', pos: otherEdges.right, isCenter: false });
+                }
+                // Right to left alignment
+                if (Math.abs(elemEdges.right - otherEdges.left) < threshold) {
+                    guides.push({ type: 'vertical', pos: otherEdges.left, isCenter: false });
+                }
+                // Center X alignment
+                if (Math.abs(elemCenter.x - otherCenter.x) < threshold) {
+                    guides.push({ type: 'vertical', pos: otherCenter.x, isCenter: true });
+                }
+
+                // Vertical alignment (horizontal guide lines)
+                // Top edge alignment
+                if (Math.abs(elemEdges.top - otherEdges.top) < threshold) {
+                    guides.push({ type: 'horizontal', pos: otherEdges.top, isCenter: false });
+                }
+                // Bottom edge alignment
+                if (Math.abs(elemEdges.bottom - otherEdges.bottom) < threshold) {
+                    guides.push({ type: 'horizontal', pos: otherEdges.bottom, isCenter: false });
+                }
+                // Top to bottom alignment
+                if (Math.abs(elemEdges.top - otherEdges.bottom) < threshold) {
+                    guides.push({ type: 'horizontal', pos: otherEdges.bottom, isCenter: false });
+                }
+                // Bottom to top alignment
+                if (Math.abs(elemEdges.bottom - otherEdges.top) < threshold) {
+                    guides.push({ type: 'horizontal', pos: otherEdges.top, isCenter: false });
+                }
+                // Center Y alignment
+                if (Math.abs(elemCenter.y - otherCenter.y) < threshold) {
+                    guides.push({ type: 'horizontal', pos: otherCenter.y, isCenter: true });
+                }
+            });
+
+            // Deduplicate guides
+            const uniqueGuides = [];
+            guides.forEach(g => {
+                if (!uniqueGuides.some(u => u.type === g.type && Math.abs(u.pos - g.pos) < 1)) {
+                    uniqueGuides.push(g);
+                }
+            });
+
+            // Render guides
+            uniqueGuides.forEach(g => {
+                const line = document.createElement('div');
+                line.className = `guide-line ${g.type}${g.isCenter ? ' center' : ''}`;
+
+                if (g.type === 'horizontal') {
+                    line.style.top = g.pos + 'px';
+                } else {
+                    line.style.left = g.pos + 'px';
+                }
+
+                elements.guideContainer.appendChild(line);
+            });
+
+            state.guides = uniqueGuides;
+        }
+
+        function clearGuides() {
+            elements.guideContainer.innerHTML = '';
+            state.guides = [];
         }
 
         // =========================================================================
@@ -2311,6 +2636,107 @@
         }
 
         // =========================================================================
+        // Element Search
+        // =========================================================================
+
+        function filterElementTree(query) {
+            const nodes = elements.elementTree.querySelectorAll('.tree-node');
+            const trimmedQuery = query.trim().toLowerCase();
+
+            if (!trimmedQuery) {
+                // Clear search - show all nodes
+                nodes.forEach(node => {
+                    node.classList.remove('search-hidden', 'search-match');
+                    // Restore original label
+                    const label = node.querySelector('span:last-child');
+                    if (label && label.dataset.originalText) {
+                        label.textContent = label.dataset.originalText;
+                    }
+                });
+                elements.treeSearchCount.classList.remove('visible');
+                elements.treeSearchWrapper.classList.remove('has-value');
+                return;
+            }
+
+            elements.treeSearchWrapper.classList.add('has-value');
+
+            let matchCount = 0;
+            const matchedPaths = new Set();
+
+            // First pass: find matches and collect their paths
+            nodes.forEach(node => {
+                const label = node.querySelector('span:last-child');
+                if (!label) return;
+
+                // Store original text
+                if (!label.dataset.originalText) {
+                    label.dataset.originalText = label.textContent;
+                }
+
+                const text = label.dataset.originalText.toLowerCase();
+                const isMatch = text.includes(trimmedQuery);
+
+                if (isMatch) {
+                    matchCount++;
+                    // Store this path and all ancestor paths
+                    const path = node.dataset.path;
+                    if (path) {
+                        matchedPaths.add(path);
+                        // Add ancestor paths
+                        const parts = path.split(',').map(Number);
+                        for (let i = 1; i < parts.length; i++) {
+                            matchedPaths.add(parts.slice(0, i).join(','));
+                        }
+                    }
+                }
+            });
+
+            // Second pass: show/hide and highlight
+            nodes.forEach(node => {
+                const label = node.querySelector('span:last-child');
+                if (!label) return;
+
+                const path = node.dataset.path;
+                const text = label.dataset.originalText;
+                const textLower = text.toLowerCase();
+                const isMatch = textLower.includes(trimmedQuery);
+                const isAncestor = matchedPaths.has(path);
+
+                if (isMatch || isAncestor) {
+                    node.classList.remove('search-hidden');
+
+                    if (isMatch) {
+                        node.classList.add('search-match');
+                        // Highlight matching text
+                        const startIndex = textLower.indexOf(trimmedQuery);
+                        const endIndex = startIndex + trimmedQuery.length;
+                        const before = text.substring(0, startIndex);
+                        const match = text.substring(startIndex, endIndex);
+                        const after = text.substring(endIndex);
+                        label.innerHTML = before + '<span class="tree-node-highlight">' + match + '</span>' + after;
+                    } else {
+                        node.classList.remove('search-match');
+                        label.textContent = text;
+                    }
+                } else {
+                    node.classList.add('search-hidden');
+                    node.classList.remove('search-match');
+                    label.textContent = text;
+                }
+            });
+
+            // Update count display
+            elements.treeSearchCount.textContent = matchCount + ' match' + (matchCount !== 1 ? 'es' : '');
+            elements.treeSearchCount.classList.add('visible');
+        }
+
+        function clearTreeSearch() {
+            elements.treeSearchInput.value = '';
+            filterElementTree('');
+            elements.treeSearchInput.focus();
+        }
+
+        // =========================================================================
         // Selection
         // =========================================================================
 
@@ -2324,6 +2750,7 @@
                 }
                 if (e.target !== state.selectedElement && e.target !== doc.body) {
                     e.target.classList.add('editor-hover');
+                    showAlignmentGuides(e.target);
                     hoveredElement = e.target;
                 }
             });
@@ -2825,6 +3252,22 @@
         // Sample button
         elements.btnSample.addEventListener('click', loadSampleHtml);
 
+        // Tree search
+        elements.treeSearchInput.addEventListener('input', (e) => {
+            filterElementTree(e.target.value);
+        });
+
+        elements.treeSearchClear.addEventListener('click', clearTreeSearch);
+
+        elements.treeSearchInput.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape') {
+                if (elements.treeSearchInput.value) {
+                    clearTreeSearch();
+                    e.stopPropagation();
+                }
+            }
+        });
+
         // Drop zone - click to open file picker
         elements.dropZone.addEventListener('click', () => elements.fileInput.click());
 
@@ -2901,6 +3344,12 @@
                     e.preventDefault();
                     deleteSelectedElement();
                 }
+            }
+
+            // Grid toggle with G key
+            if (e.key === 'g' && !isInputFocused && state.documentLoaded) {
+                e.preventDefault();
+                toggleGrid();
             }
 
             // Escape to deselect
@@ -3017,6 +3466,9 @@
         // Initialize theme
         initTheme();
         elements.btnTheme.addEventListener('click', toggleTheme);
+
+        // Grid toggle
+        elements.btnGrid.addEventListener('click', toggleGrid);
 
         // Initialize transform
         updateTransform();

@@ -57,7 +57,7 @@
 - [ ] Dark mode
 - [ ] Recent files (localStorage)
 - [ ] Auto-save drafts
-- [ ] Element search/filter
+- [x] Element search/filter
 
 ### P3 - Delight
 - [ ] Smooth animations throughout
