@@ -1388,7 +1388,7 @@
                 const label = document.createElement('span');
                 const id = element.id ? '#' + element.id : '';
                 const cls = element.className && typeof element.className === 'string'
-                    ? '.' + element.className.split(' ').filter(c => !c.startsWith('editor-')).slice(0, 1).join('.')
+                    ? (element.className.split(' ').filter(c => c && !c.startsWith('editor-')).slice(0, 1)[0] ? '.' + element.className.split(' ').filter(c => c && !c.startsWith('editor-'))[0] : '')
                     : '';
                 label.textContent = element.tagName.toLowerCase() + id + cls;
 
@@ -1900,7 +1900,7 @@
 
             state.selectedElements.forEach(element => {
                 const style = element.style;
-                const computedStyle = window.getComputedStyle(element);
+                const computedStyle = element.ownerDocument.defaultView.getComputedStyle(element);
 
                 // Get current position or margins
                 let currentLeft = parseInt(style.marginLeft) || parseInt(computedStyle.marginLeft) || 0;
