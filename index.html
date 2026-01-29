@@ -553,6 +553,99 @@
             display: block;
         }
 
+        /* Search mode toggle */
+        .search-mode-toggle {
+            display: flex;
+            gap: 2px;
+            padding: var(--space-1) var(--space-3);
+            background: var(--bg-muted);
+            border-radius: var(--radius-md);
+            margin: 0 var(--space-3) var(--space-2);
+        }
+
+        .search-mode-btn {
+            flex: 1;
+            padding: var(--space-1) var(--space-2);
+            font-size: var(--text-xs);
+            font-weight: 500;
+            color: var(--text-muted);
+            background: transparent;
+            border: none;
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            transition: all var(--transition-fast);
+        }
+
+        .search-mode-btn:hover {
+            color: var(--text-secondary);
+        }
+
+        .search-mode-btn.active {
+            background: var(--bg-elevated);
+            color: var(--text);
+            box-shadow: var(--shadow-sm);
+        }
+
+        /* Text search results */
+        .text-search-results {
+            flex: 1;
+            overflow-y: auto;
+            display: none;
+        }
+
+        .text-search-results.visible {
+            display: block;
+        }
+
+        .text-search-result {
+            padding: var(--space-2) var(--space-4);
+            cursor: pointer;
+            font-size: var(--text-sm);
+            border-bottom: 1px solid var(--border-subtle);
+            transition: background var(--transition-fast);
+        }
+
+        .text-search-result:hover {
+            background: var(--bg-hover);
+        }
+
+        .text-search-result:last-child {
+            border-bottom: none;
+        }
+
+        .text-search-result-tag {
+            font-size: var(--text-xs);
+            color: var(--text-muted);
+            font-family: var(--font-mono);
+            margin-bottom: 2px;
+        }
+
+        .text-search-result-text {
+            color: var(--text);
+            word-break: break-word;
+        }
+
+        .text-search-result-text mark {
+            background: rgba(251, 191, 36, 0.4);
+            color: inherit;
+            border-radius: 2px;
+            padding: 0 2px;
+        }
+
+        .text-search-empty {
+            padding: var(--space-4);
+            color: var(--text-muted);
+            text-align: center;
+            font-size: var(--text-sm);
+        }
+
+        .text-search-hint {
+            padding: var(--space-4);
+            color: var(--text-muted);
+            text-align: center;
+            font-size: var(--text-sm);
+        }
+
         /* === ELEMENT TREE === */
         .element-tree {
             flex: 1;
@@ -2049,6 +2142,36 @@
             color: var(--text);
         }
 
+        .apply-all-checkbox {
+            display: flex;
+            align-items: center;
+            gap: var(--space-2);
+            margin-top: var(--space-2);
+            padding: var(--space-2);
+            background: var(--bg-muted);
+            border-radius: var(--radius-sm);
+            cursor: pointer;
+            font-size: var(--text-xs);
+            color: var(--text-secondary);
+            transition: all var(--transition-fast);
+        }
+
+        .apply-all-checkbox:hover {
+            background: var(--bg-hover);
+            color: var(--text);
+        }
+
+        .apply-all-checkbox input[type="checkbox"] {
+            width: 14px;
+            height: 14px;
+            accent-color: var(--accent);
+            cursor: pointer;
+        }
+
+        .apply-all-checkbox span {
+            user-select: none;
+        }
+
         .document-colors {
             margin-top: var(--space-3);
         }
@@ -2741,9 +2864,16 @@
                     <button class="tree-search-clear" id="tree-search-clear">×</button>
                 </div>
             </div>
+            <div class="search-mode-toggle">
+                <button class="search-mode-btn active" id="search-mode-elements" data-mode="elements">Elements</button>
+                <button class="search-mode-btn" id="search-mode-text" data-mode="text">Text Content</button>
+            </div>
             <div class="tree-search-count" id="tree-search-count"></div>
             <div class="element-tree" id="element-tree">
                 <div class="no-selection">Load an HTML file to see elements</div>
+            </div>
+            <div class="text-search-results" id="text-search-results">
+                <div class="text-search-hint" id="text-search-hint">Type to search text content (e.g., find typos)</div>
             </div>
         </aside>
 
@@ -2991,6 +3121,10 @@
                                 <input type="color" class="property-input" id="prop-bg-color" value="#ffffff">
                                 <span class="color-value-display" id="prop-bg-color-value" title="Click to copy">#ffffff</span>
                             </div>
+                            <label class="apply-all-checkbox">
+                                <input type="checkbox" id="apply-all-bg-color">
+                                <span>Apply to all matching colors</span>
+                            </label>
                             <div class="document-colors" id="doc-colors-bg">
                                 <div class="document-colors-header">
                                     <span class="document-colors-label">Document colors</span>
@@ -3296,6 +3430,10 @@
             <span class="context-menu-item-label">Duplicate</span>
             <span class="context-menu-item-shortcut">Ctrl+D</span>
         </div>
+        <div class="context-menu-item" data-action="duplicate-section" id="ctx-duplicate-section" style="display: none;">
+            <span class="context-menu-item-icon">📑</span>
+            <span class="context-menu-item-label">Duplicate This Section</span>
+        </div>
         <div class="context-menu-item" data-action="copy">
             <span class="context-menu-item-icon">📄</span>
             <span class="context-menu-item-label">Copy</span>
@@ -3418,6 +3556,9 @@
             spacingDragStartX: 0,
             spacingDragStartValue: 0,
             spacingShiftKey: false,
+            // Search mode state
+            searchMode: 'elements', // 'elements' or 'text'
+            textSearchResults: [],
             // Document colors state
             documentColors: [],
             documentFonts: [],
@@ -3425,7 +3566,10 @@
             fontPickerOpen: false,
             selectedDocColor: null,
             replaceColorType: null, // 'text' or 'bg'
-            replaceFromColor: null
+            replaceFromColor: null,
+            // Track last selected colors for "apply to all matching" feature
+            lastTextColor: null,
+            lastBgColor: null
         };
 
         // =========================================================================
@@ -3470,6 +3614,10 @@
             treeSearchWrapper: document.getElementById('tree-search-wrapper'),
             treeSearchClear: document.getElementById('tree-search-clear'),
             treeSearchCount: document.getElementById('tree-search-count'),
+            searchModeElements: document.getElementById('search-mode-elements'),
+            searchModeText: document.getElementById('search-mode-text'),
+            textSearchResults: document.getElementById('text-search-results'),
+            textSearchHint: document.getElementById('text-search-hint'),
             propertiesPanel: document.getElementById('properties-panel'),
             noSelection: document.getElementById('no-selection'),
             propertySections: document.getElementById('property-sections'),
@@ -3544,6 +3692,8 @@
             // Document colors elements
             propColorValue: document.getElementById('prop-color-value'),
             propBgColorValue: document.getElementById('prop-bg-color-value'),
+            applyAllTextColor: document.getElementById('apply-all-text-color'),
+            applyAllBgColor: document.getElementById('apply-all-bg-color'),
             docColorsTextGrid: document.getElementById('doc-colors-text-grid'),
             docColorsBgGrid: document.getElementById('doc-colors-bg-grid'),
             btnReplaceTextColor: document.getElementById('btn-replace-text-color'),
@@ -4223,6 +4373,18 @@
             const isLast = element && element.parentElement && element === element.parentElement.lastElementChild;
             moveDownItem.classList.toggle('disabled', isLast);
 
+            // Show "Duplicate Section" for section-type elements (slides)
+            const duplicateSectionItem = menu.querySelector('[data-action="duplicate-section"]');
+            if (duplicateSectionItem) {
+                const sectionTags = ['SECTION', 'ARTICLE', 'ASIDE', 'HEADER', 'FOOTER', 'NAV', 'MAIN'];
+                const isSection = element && (
+                    sectionTags.includes(element.tagName) ||
+                    (element.tagName === 'DIV' && element.classList.contains('slide')) ||
+                    (element.tagName === 'DIV' && element.parentElement && element.parentElement.tagName === 'BODY')
+                );
+                duplicateSectionItem.style.display = isSection ? 'flex' : 'none';
+            }
+
             // Position menu
             menu.style.left = x + 'px';
             menu.style.top = y + 'px';
@@ -4263,6 +4425,12 @@
 
                 case 'duplicate':
                     duplicateSelectedElement();
+                    break;
+
+                case 'duplicate-section':
+                    if (duplicateSelectedElement()) {
+                        showToast('success', 'Section Duplicated', 'New section added after the original');
+                    }
                     break;
 
                 case 'copy':
@@ -5336,8 +5504,201 @@
 
         function clearTreeSearch() {
             elements.treeSearchInput.value = '';
-            filterElementTree('');
+            if (state.searchMode === 'elements') {
+                filterElementTree('');
+            } else {
+                clearTextSearchResults();
+            }
             elements.treeSearchInput.focus();
+        }
+
+        // =========================================================================
+        // Text Content Search
+        // =========================================================================
+
+        function setSearchMode(mode) {
+            state.searchMode = mode;
+
+            // Update toggle buttons
+            elements.searchModeElements.classList.toggle('active', mode === 'elements');
+            elements.searchModeText.classList.toggle('active', mode === 'text');
+
+            // Update placeholder
+            elements.treeSearchInput.placeholder = mode === 'elements' ?
+                'Search elements...' : 'Search text content...';
+
+            // Show/hide appropriate panel
+            elements.elementTree.style.display = mode === 'elements' ? 'block' : 'none';
+            elements.textSearchResults.style.display = mode === 'text' ? 'block' : 'none';
+
+            // Clear and re-run search with current query
+            const query = elements.treeSearchInput.value;
+            if (mode === 'elements') {
+                clearTextSearchResults();
+                filterElementTree(query);
+            } else {
+                filterElementTree(''); // Reset element tree
+                searchTextContent(query);
+            }
+        }
+
+        function getTextSearchElementPath(element) {
+            const path = [];
+            let current = element;
+            const doc = elements.previewFrame.contentDocument;
+            const body = doc.body;
+
+            while (current && current !== body && current.parentElement) {
+                const parent = current.parentElement;
+                const children = Array.from(parent.children);
+                const index = children.indexOf(current);
+                path.unshift(index);
+                current = parent;
+            }
+
+            return path;
+        }
+
+        function searchTextContent(query) {
+            const trimmedQuery = query.trim().toLowerCase();
+
+            // Clear previous results
+            clearTextSearchResults();
+
+            if (!trimmedQuery) {
+                elements.textSearchHint.style.display = 'block';
+                elements.treeSearchCount.classList.remove('visible');
+                elements.treeSearchWrapper.classList.remove('has-value');
+                return;
+            }
+
+            elements.textSearchHint.style.display = 'none';
+            elements.treeSearchWrapper.classList.add('has-value');
+
+            const doc = elements.previewFrame.contentDocument;
+            if (!doc || !doc.body) {
+                elements.textSearchResults.innerHTML = '<div class="text-search-empty">No document loaded</div>';
+                return;
+            }
+
+            // Find all text nodes
+            const results = [];
+            const walker = document.createTreeWalker(
+                doc.body,
+                NodeFilter.SHOW_TEXT,
+                {
+                    acceptNode: function(node) {
+                        // Skip empty/whitespace-only nodes
+                        if (!node.textContent.trim()) return NodeFilter.FILTER_REJECT;
+                        // Skip script/style content
+                        if (node.parentElement.tagName === 'SCRIPT' ||
+                            node.parentElement.tagName === 'STYLE') {
+                            return NodeFilter.FILTER_REJECT;
+                        }
+                        return NodeFilter.FILTER_ACCEPT;
+                    }
+                }
+            );
+
+            let textNode;
+            while (textNode = walker.nextNode()) {
+                const text = textNode.textContent;
+                const textLower = text.toLowerCase();
+
+                if (textLower.includes(trimmedQuery)) {
+                    const element = textNode.parentElement;
+                    const path = getTextSearchElementPath(element);
+
+                    // Find all match positions
+                    let index = 0;
+                    while ((index = textLower.indexOf(trimmedQuery, index)) !== -1) {
+                        results.push({
+                            element: element,
+                            path: path,
+                            text: text,
+                            matchStart: index,
+                            matchEnd: index + trimmedQuery.length,
+                            tagName: element.tagName.toLowerCase()
+                        });
+                        index += trimmedQuery.length;
+                    }
+                }
+            }
+
+            state.textSearchResults = results;
+
+            // Update count
+            elements.treeSearchCount.textContent = results.length + ' match' + (results.length !== 1 ? 'es' : '');
+            elements.treeSearchCount.classList.add('visible');
+
+            // Render results
+            if (results.length === 0) {
+                elements.textSearchResults.innerHTML = '<div class="text-search-empty">No matches found</div>';
+            } else {
+                renderTextSearchResults(results, trimmedQuery);
+            }
+        }
+
+        function escapeRegExp(string) {
+            return string.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
+        }
+
+        function renderTextSearchResults(results, query) {
+            // Group by element to avoid duplicates
+            const uniqueResults = [];
+            const seenPaths = new Set();
+
+            results.forEach(result => {
+                const pathKey = result.path.join(',');
+                if (!seenPaths.has(pathKey)) {
+                    seenPaths.add(pathKey);
+                    uniqueResults.push(result);
+                }
+            });
+
+            const html = uniqueResults.map((result, index) => {
+                // Get context around the match
+                const text = result.text.trim();
+                const maxLength = 80;
+                let displayText = text;
+
+                if (text.length > maxLength) {
+                    // Try to center around the first match
+                    const matchIndex = text.toLowerCase().indexOf(query);
+                    const start = Math.max(0, matchIndex - 30);
+                    const end = Math.min(text.length, matchIndex + query.length + 30);
+                    displayText = (start > 0 ? '...' : '') +
+                        text.substring(start, end) +
+                        (end < text.length ? '...' : '');
+                }
+
+                // Highlight all matches in the display text
+                const highlightedText = displayText.replace(
+                    new RegExp(escapeRegExp(query), 'gi'),
+                    '<mark>$&</mark>'
+                );
+
+                return '<div class="text-search-result" data-index="' + index + '" data-path="' + result.path.join(',') + '">' +
+                    '<div class="text-search-result-tag">&lt;' + result.tagName + '&gt;</div>' +
+                    '<div class="text-search-result-text">' + highlightedText + '</div>' +
+                '</div>';
+            }).join('');
+
+            elements.textSearchResults.innerHTML = html;
+
+            // Add click handlers
+            elements.textSearchResults.querySelectorAll('.text-search-result').forEach(resultEl => {
+                resultEl.addEventListener('click', () => {
+                    const path = resultEl.dataset.path.split(',').map(Number);
+                    selectElementByPath(path);
+                });
+            });
+        }
+
+        function clearTextSearchResults() {
+            state.textSearchResults = [];
+            elements.textSearchResults.innerHTML = '<div class="text-search-hint" id="text-search-hint">Type to search text content (e.g., find typos)</div>';
+            elements.textSearchHint = elements.textSearchResults.querySelector('#text-search-hint');
         }
 
         // =========================================================================
@@ -5814,10 +6175,20 @@
             elements.propColorValue.textContent = textColor;
             elements.propTextAlign.value = computed.textAlign;
 
+            // Track color for "apply to all matching" feature
+            state.lastTextColor = textColor !== 'transparent' ? textColor : null;
+
             const bgColor = rgbToHex(computed.backgroundColor);
             // Color input doesn't support 'transparent', use white as fallback for display
             elements.propBgColor.value = bgColor !== 'transparent' ? bgColor : '#ffffff';
             elements.propBgColorValue.textContent = bgColor !== 'transparent' ? bgColor : 'transparent';
+
+            // Track background color for "apply to all matching" feature
+            state.lastBgColor = bgColor !== 'transparent' ? bgColor : null;
+
+            // Reset "apply to all" checkboxes when selecting new element
+            if (elements.applyAllTextColor) elements.applyAllTextColor.checked = false;
+            if (elements.applyAllBgColor) elements.applyAllBgColor.checked = false;
 
             // Update active color swatches
             updateActiveColorSwatch(textColor, 'text');
@@ -6136,6 +6507,42 @@
             }
 
             showToast('success', 'Colors replaced', `Changed ${replacedCount} element${replacedCount !== 1 ? 's' : ''} from ${fromColor} to ${toColor}`);
+        }
+
+        function applyColorToAllMatching(fromColor, toColor, property) {
+            // Apply color change to all elements with matching color
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            if (!doc.body) return;
+
+            saveState();
+
+            let changedCount = 0;
+            const allElements = doc.body.querySelectorAll('*:not(script):not(style):not(#editor-styles)');
+
+            allElements.forEach(el => {
+                const computed = doc.defaultView.getComputedStyle(el);
+                const currentColor = rgbToHex(computed[property]);
+
+                if (currentColor === fromColor) {
+                    el.style[property] = toColor;
+                    changedCount++;
+                }
+            });
+
+            // Update state to track new color
+            if (property === 'color') {
+                state.lastTextColor = toColor;
+            } else if (property === 'backgroundColor') {
+                state.lastBgColor = toColor;
+            }
+
+            // Refresh document colors
+            scanDocumentColors();
+
+            if (changedCount > 1) {
+                showToast('success', 'Colors updated', `Changed ${changedCount} elements from ${fromColor} to ${toColor}`);
+            }
         }
 
         function updateColorValueDisplay() {
@@ -7385,7 +7792,11 @@
 
         // Tree search
         elements.treeSearchInput.addEventListener('input', (e) => {
-            filterElementTree(e.target.value);
+            if (state.searchMode === 'elements') {
+                filterElementTree(e.target.value);
+            } else {
+                searchTextContent(e.target.value);
+            }
         });
 
         elements.treeSearchClear.addEventListener('click', clearTreeSearch);
@@ -7398,6 +7809,10 @@
                 }
             }
         });
+
+        // Search mode toggle
+        elements.searchModeElements.addEventListener('click', () => setSearchMode('elements'));
+        elements.searchModeText.addEventListener('click', () => setSearchMode('text'));
 
         // Drop zone - click to open file picker
         elements.dropZone.addEventListener('click', () => elements.fileInput.click());
@@ -7634,13 +8049,23 @@
         });
         elements.propFontWeight.addEventListener('change', (e) => applyProperty('fontWeight', e.target.value));
         elements.propColor.addEventListener('input', (e) => {
-            applyProperty('color', e.target.value);
-            elements.propColorValue.textContent = e.target.value;
+            const newColor = e.target.value;
+            if (elements.applyAllTextColor.checked && state.lastTextColor) {
+                applyColorToAllMatching(state.lastTextColor, newColor, 'color');
+            } else {
+                applyProperty('color', newColor);
+            }
+            elements.propColorValue.textContent = newColor;
         });
         elements.propTextAlign.addEventListener('change', (e) => applyProperty('textAlign', e.target.value));
         elements.propBgColor.addEventListener('input', (e) => {
-            applyProperty('backgroundColor', e.target.value);
-            elements.propBgColorValue.textContent = e.target.value;
+            const newColor = e.target.value;
+            if (elements.applyAllBgColor.checked && state.lastBgColor) {
+                applyColorToAllMatching(state.lastBgColor, newColor, 'backgroundColor');
+            } else {
+                applyProperty('backgroundColor', newColor);
+            }
+            elements.propBgColorValue.textContent = newColor;
         });
 
         // Document colors event listeners
