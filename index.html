@@ -195,9 +195,22 @@
         /* === LAYOUT === */
         .app {
             display: grid;
-            grid-template-columns: 260px 1fr 300px;
+            grid-template-columns: 200px 1fr 240px;
             grid-template-rows: 56px 1fr;
             height: 100vh;
+            transition: grid-template-columns 0.3s ease;
+        }
+
+        /* Preview mode - full width canvas, hide sidebars */
+        .app.preview-mode {
+            grid-template-columns: 0 1fr 0;
+        }
+
+        .app.preview-mode .sidebar-left,
+        .app.preview-mode .sidebar-right {
+            opacity: 0;
+            pointer-events: none;
+            overflow: hidden;
         }
 
         /* === TOOLBAR === */
@@ -665,6 +678,16 @@
             transition: background var(--transition-fast);
             margin: 0 var(--space-2);
             border-radius: var(--radius-md);
+            min-width: 0; /* Allow flex children to shrink */
+        }
+
+        .tree-node > span:last-child {
+            /* Label truncation - no wrapping */
+            flex: 1;
+            min-width: 0;
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
         .tree-node:hover {
@@ -1066,24 +1089,38 @@
 
         /* Canvas indicator for preview mode */
         .canvas-wrapper.preview-mode {
-            box-shadow: 0 0 0 2px var(--accent-500), var(--shadow-xl);
+            box-shadow: none;
         }
 
         .canvas-wrapper.preview-mode::before {
-            content: 'PREVIEW MODE - Click to interact';
+            content: 'PREVIEW - Press P to edit';
             position: absolute;
-            top: -28px;
-            left: 50%;
-            transform: translateX(-50%);
-            background: var(--accent-500);
+            top: 12px;
+            right: 12px;
+            left: auto;
+            transform: none;
+            background: rgba(0, 0, 0, 0.7);
             color: white;
-            padding: var(--space-1) var(--space-3);
-            border-radius: var(--radius-full);
+            padding: var(--space-2) var(--space-3);
+            border-radius: var(--radius-md);
             font-size: var(--text-xs);
-            font-weight: 600;
-            letter-spacing: 0.02em;
+            font-weight: 500;
             white-space: nowrap;
             z-index: 100;
+            opacity: 0.8;
+            transition: opacity 0.2s;
+        }
+
+        .canvas-wrapper.preview-mode:hover::before {
+            opacity: 1;
+        }
+
+        /* Hide ALL editing UI in preview mode */
+        .canvas-wrapper.preview-mode .resize-overlay,
+        .canvas-wrapper.preview-mode .spacing-overlay,
+        .canvas-wrapper.preview-mode .grid-overlay,
+        .canvas-wrapper.preview-mode #guide-container {
+            display: none !important;
         }
 
         /* =========================================================================
@@ -2215,14 +2252,17 @@
 
         .spacing-grid {
             display: grid;
-            grid-template-columns: repeat(3, 1fr);
-            gap: var(--space-1);
+            grid-template-columns: 1fr 50px 1fr;
+            gap: 2px;
             margin-top: var(--space-2);
         }
 
         .spacing-grid input {
             text-align: center;
-            padding: var(--space-2);
+            padding: var(--space-1);
+            font-size: var(--text-xs);
+            min-width: 0;
+            width: 100%;
         }
 
         .spacing-grid .center {
@@ -2231,8 +2271,10 @@
             display: flex;
             align-items: center;
             justify-content: center;
-            font-size: var(--text-xs);
+            font-size: 10px;
+            font-weight: 600;
             color: var(--text-muted);
+            min-height: 28px;
         }
 
         /* No selection state */
@@ -2906,6 +2948,14 @@
                     </button>
                     <div class="dropdown-menu" id="insert-menu">
                         <div class="dropdown-section">
+                            <div class="dropdown-section-title">✨ Templates</div>
+                            <div class="dropdown-item" data-template="slide"><span class="dropdown-item-icon">🎴</span>Slide</div>
+                            <div class="dropdown-item" data-template="card"><span class="dropdown-item-icon">🃏</span>Card</div>
+                            <div class="dropdown-item" data-template="hero"><span class="dropdown-item-icon">🦸</span>Hero Section</div>
+                            <div class="dropdown-item" data-template="two-column"><span class="dropdown-item-icon">▥</span>Two Columns</div>
+                            <div class="dropdown-item" data-template="cta"><span class="dropdown-item-icon">👆</span>Call to Action</div>
+                        </div>
+                        <div class="dropdown-section">
                             <div class="dropdown-section-title">Layout</div>
                             <div class="dropdown-item" data-tag="div"><span class="dropdown-item-icon">📦</span>Container</div>
                             <div class="dropdown-item" data-tag="section"><span class="dropdown-item-icon">📄</span>Page Section</div>
@@ -2961,10 +3011,10 @@
             </div>
 
             <div class="toolbar-section zoom-controls">
-                <button class="btn btn-icon" id="btn-zoom-out" title="Zoom Out (-)">−</button>
-                <span class="zoom-level" id="zoom-level" title="Click to reset to 100%">100%</span>
-                <button class="btn btn-icon" id="btn-zoom-in" title="Zoom In (+)">+</button>
-                <button class="btn" id="btn-fit" title="Fit to Screen">Fit</button>
+                <button class="btn btn-icon" id="btn-zoom-out" title="Zoom Out (- key)">−</button>
+                <span class="zoom-level" id="zoom-level" title="Reset to 100% (0 key)">100%</span>
+                <button class="btn btn-icon" id="btn-zoom-in" title="Zoom In (+ key)">+</button>
+                <button class="btn" id="btn-fit" title="Fit to Screen (1 key)">Fit</button>
                 <button class="btn btn-icon" id="btn-grid" title="Toggle Grid (G)">⊞</button>
             </div>
 
@@ -3612,6 +3662,17 @@
     </div>
 
     <div class="context-menu" id="context-menu">
+        <div class="context-menu-item" id="ctx-undo" data-action="undo">
+            <span class="context-menu-item-icon">↩️</span>
+            <span class="context-menu-item-label">Undo</span>
+            <span class="context-menu-item-shortcut">Ctrl+Z</span>
+        </div>
+        <div class="context-menu-item" id="ctx-redo" data-action="redo">
+            <span class="context-menu-item-icon">↪️</span>
+            <span class="context-menu-item-label">Redo</span>
+            <span class="context-menu-item-shortcut">Ctrl+Y</span>
+        </div>
+        <div class="context-menu-divider"></div>
         <div class="context-menu-item" data-action="edit-text">
             <span class="context-menu-item-icon">✏️</span>
             <span class="context-menu-item-label">Edit Text</span>
@@ -4169,6 +4230,7 @@
             });
         }
 
+
         // =========================================================================
         // Preview/Edit Mode
         // =========================================================================
@@ -4180,14 +4242,47 @@
             elements.btnEditMode.classList.toggle('active', !enabled);
             elements.btnPreviewMode.classList.toggle('active', enabled);
 
+            // Toggle app-level preview mode class (hides sidebars)
+            document.querySelector('.app').classList.toggle('preview-mode', enabled);
+
             // Update canvas wrapper
             elements.canvasWrapper.classList.toggle('preview-mode', enabled);
 
-            // Hide quick actions in preview mode
             if (enabled) {
+                // PREVIEW MODE: Clean view, no editing UI
+
+                // Deselect everything
+                if (state.selectedElement) {
+                    clearSelection();
+                }
+
+                // Hide all editing overlays
                 hideQuickActions();
-            } else if (state.selectedElement) {
-                updateQuickActions();
+                clearGuides();
+                if (elements.resizeOverlay) {
+                    elements.resizeOverlay.classList.remove('active');
+                }
+                if (elements.spacingOverlay) {
+                    elements.spacingOverlay.classList.remove('active');
+                }
+                if (elements.gridOverlay) {
+                    elements.gridOverlay.classList.remove('visible');
+                }
+
+                // Remove any selection highlighting from iframe
+                const frame = elements.previewFrame;
+                if (frame.contentDocument) {
+                    const highlighted = frame.contentDocument.querySelectorAll('[data-mangle-selected]');
+                    highlighted.forEach(el => {
+                        el.removeAttribute('data-mangle-selected');
+                        el.style.outline = '';
+                    });
+                }
+            } else {
+                // EDIT MODE: Show editing tools
+                if (state.selectedElement) {
+                    updateQuickActions();
+                }
             }
 
             // Update iframe interactions
@@ -4196,11 +4291,11 @@
                 frame.contentDocument.body.style.pointerEvents = enabled ? 'auto' : 'none';
             }
 
-            // Show toast notification
+            // Show toast notification (brief)
             if (enabled) {
-                showToast('info', 'Preview Mode', 'Click elements to interact. Press P to edit.');
+                showToast('info', 'Preview Mode', 'Clean view. Press P to edit.', 2000);
             } else {
-                showToast('info', 'Edit Mode', 'Click elements to select and edit.');
+                showToast('info', 'Edit Mode', 'Click elements to select.', 2000);
             }
         }
 
@@ -4336,7 +4431,10 @@
             // Most actions need to save state first
             const needsSaveState = !['toggle-layout-menu'].includes(action);
             if (needsSaveState) {
-                saveState();
+                // Determine change type based on action category
+                const layoutActions = ['center-h', 'center-v', 'full-width', 'reset-size', 'make-flex-row', 'make-flex-col', 'make-grid', 'make-block'];
+                const changeType = layoutActions.includes(action) ? 'layout' : 'style';
+                saveState(changeType);
             }
 
             switch (action) {
@@ -4605,6 +4703,18 @@
         }
 
         function handleContextMenuAction(action) {
+            // Undo/Redo work without selection
+            if (action === 'undo') {
+                undo();
+                hideContextMenu();
+                return;
+            }
+            if (action === 'redo') {
+                redo();
+                hideContextMenu();
+                return;
+            }
+
             if (!state.selectedElement) return;
 
             const frame = elements.previewFrame;
@@ -4671,7 +4781,7 @@
 
             if (!prev || element.tagName === 'BODY') return;
 
-            saveState();
+            saveState('move');
             parent.insertBefore(element, prev);
 
             const frame = elements.previewFrame;
@@ -4692,7 +4802,7 @@
 
             if (!next || element.tagName === 'BODY') return;
 
-            saveState();
+            saveState('move');
             parent.insertBefore(next, element);
 
             const frame = elements.previewFrame;
@@ -4770,9 +4880,9 @@
             elements.btnInsert.disabled = false;
             state.documentLoaded = true;
 
-            state.zoom = 1;
+            // Auto-fit to screen on load
             requestAnimationFrame(() => {
-                centerCanvas();
+                fitToScreen();
             });
 
             // Scan for document colors
@@ -4853,7 +4963,7 @@
             }
 
             // Save state before modification
-            saveState();
+            saveState('add');
 
             // Insert into DOM
             let parentElement;
@@ -4873,6 +4983,80 @@
             selectElementByPath(newPath);
 
             closeInsertMenu();
+        }
+
+        // Template definitions for pre-styled components
+        const templates = {
+            slide: `<section style="padding: 60px 40px; min-height: 400px; background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);">
+                <h1 style="color: white; font-size: 48px; margin-bottom: 20px;">Slide Title</h1>
+                <p style="color: rgba(255,255,255,0.9); font-size: 24px; max-width: 600px;">Add your content here. This is a presentation slide template.</p>
+            </section>`,
+            
+            card: `<div style="background: white; border-radius: 12px; padding: 24px; box-shadow: 0 4px 20px rgba(0,0,0,0.1); max-width: 400px;">
+                <h3 style="color: #1a1a2e; margin-bottom: 12px; font-size: 20px;">Card Title</h3>
+                <p style="color: #666; line-height: 1.6;">This is a card component. Great for featuring content, testimonials, or product info.</p>
+                <button style="background: #667eea; color: white; border: none; padding: 10px 20px; border-radius: 6px; cursor: pointer; margin-top: 16px;">Learn More</button>
+            </div>`,
+            
+            hero: `<section style="padding: 80px 40px; min-height: 500px; background: #1a1a2e; text-align: center; display: flex; flex-direction: column; align-items: center; justify-content: center;">
+                <h1 style="color: white; font-size: 56px; margin-bottom: 24px; max-width: 800px;">Your Big Headline Here</h1>
+                <p style="color: rgba(255,255,255,0.8); font-size: 20px; max-width: 600px; margin-bottom: 32px;">A compelling subheadline that explains your value proposition.</p>
+                <button style="background: #667eea; color: white; border: none; padding: 16px 32px; border-radius: 8px; font-size: 18px; cursor: pointer;">Get Started</button>
+            </section>`,
+            
+            'two-column': `<div style="display: flex; gap: 40px; padding: 40px;">
+                <div style="flex: 1;">
+                    <h2 style="color: #1a1a2e; margin-bottom: 16px;">Left Column</h2>
+                    <p style="color: #666; line-height: 1.6;">Content for the left side. You can add text, images, or other elements here.</p>
+                </div>
+                <div style="flex: 1;">
+                    <h2 style="color: #1a1a2e; margin-bottom: 16px;">Right Column</h2>
+                    <p style="color: #666; line-height: 1.6;">Content for the right side. Perfect for comparisons or side-by-side layouts.</p>
+                </div>
+            </div>`,
+            
+            cta: `<div style="background: linear-gradient(135deg, #f093fb 0%, #f5576c 100%); padding: 48px; text-align: center; border-radius: 16px;">
+                <h2 style="color: white; font-size: 32px; margin-bottom: 16px;">Ready to Get Started?</h2>
+                <p style="color: rgba(255,255,255,0.9); font-size: 18px; margin-bottom: 24px;">Join thousands of users who already love our product.</p>
+                <button style="background: white; color: #f5576c; border: none; padding: 14px 28px; border-radius: 8px; font-size: 16px; font-weight: bold; cursor: pointer;">Sign Up Free</button>
+            </div>`
+        };
+
+        function insertTemplate(templateName) {
+            const frame = elements.previewFrame;
+            const doc = frame.contentDocument || frame.contentWindow.document;
+            
+            const templateHtml = templates[templateName];
+            if (!templateHtml) return;
+            
+            // Create a temporary container to parse the HTML
+            const temp = doc.createElement('div');
+            temp.innerHTML = templateHtml.trim();
+            const newElement = temp.firstElementChild;
+            
+            if (!newElement) return;
+
+            // Save state for undo
+            saveState('add');
+
+            // Determine where to insert
+            let parentElement;
+            if (state.selectedElement && state.selectedElement.tagName !== 'BODY') {
+                parentElement = state.selectedElement.parentElement || doc.body;
+                // Insert after selected element
+                state.selectedElement.parentElement.insertBefore(newElement, state.selectedElement.nextSibling);
+            } else {
+                parentElement = doc.body;
+                parentElement.appendChild(newElement);
+            }
+            
+            // Rebuild tree and select new element
+            buildElementTree(doc.body);
+            const newPath = getElementPath(newElement, doc.body);
+            selectElementByPath(newPath);
+            
+            closeInsertMenu();
+            showToast('success', 'Template Added', 'New ' + templateName + ' inserted');
         }
 
         // =========================================================================
@@ -4930,22 +5114,24 @@
 
         function fitToScreen() {
             const viewport = elements.canvasViewport.getBoundingClientRect();
-            const frameWidth = 800;
-            const frameHeight = 600;
-            const padding = 40;
+            // Use actual frame dimensions
+            const frameWidth = parseInt(elements.previewFrame.width) || 800;
+            const frameHeight = parseInt(elements.previewFrame.height) || 600;
+            const padding = 60;
 
             const scaleX = (viewport.width - padding * 2) / frameWidth;
             const scaleY = (viewport.height - padding * 2) / frameHeight;
-            const scale = Math.min(scaleX, scaleY, 1);
+            // Allow zoom out past 100% to fit large content
+            const scale = Math.min(scaleX, scaleY);
 
-            state.zoom = scale;
+            state.zoom = Math.max(state.minZoom, Math.min(state.maxZoom, scale));
             centerCanvas();
         }
 
         function centerCanvas() {
             const viewport = elements.canvasViewport.getBoundingClientRect();
-            const frameWidth = 800 * state.zoom;
-            const frameHeight = 600 * state.zoom;
+            const frameWidth = (parseInt(elements.previewFrame.width) || 800) * state.zoom;
+            const frameHeight = (parseInt(elements.previewFrame.height) || 600) * state.zoom;
 
             state.panX = (viewport.width - frameWidth) / 2;
             state.panY = (viewport.height - frameHeight) / 2;
@@ -4956,6 +5142,14 @@
             // Only handle zoom when over canvas area
             if (!elements.canvasArea.contains(e.target) && e.target !== elements.canvasArea) {
                 return;
+            }
+
+            // If space is down, scroll wheel zooms (Figma-style)
+            // Otherwise, ctrl+scroll zooms, plain scroll does nothing (allow page scroll)
+            const shouldZoom = state.isSpaceDown || e.ctrlKey || e.metaKey;
+            
+            if (!shouldZoom) {
+                return; // Allow normal scroll behavior
             }
 
             e.preventDefault();
@@ -5007,11 +5201,29 @@
         // Undo/Redo System
         // =========================================================================
 
-        function saveState() {
-            const html = getFrameHtml();
-            if (html === state.undoStack[state.undoStack.length - 1]) return;
+        // Change type labels for user-friendly undo/redo descriptions
+        const CHANGE_TYPES = {
+            'style': 'style change',
+            'text': 'text edit',
+            'delete': 'delete',
+            'add': 'add element',
+            'move': 'move',
+            'duplicate': 'duplicate',
+            'paste': 'paste',
+            'layout': 'layout change',
+            'resize': 'resize',
+            'spacing': 'spacing change',
+            'default': 'change'
+        };
 
-            state.undoStack.push(html);
+        function saveState(changeType = 'default') {
+            const html = getFrameHtml();
+            const lastEntry = state.undoStack[state.undoStack.length - 1];
+            const lastHtml = lastEntry ? (lastEntry.html || lastEntry) : null;
+
+            if (html === lastHtml) return;
+
+            state.undoStack.push({ html, type: changeType });
             if (state.undoStack.length > state.maxUndoSteps) {
                 state.undoStack.shift();
             }
@@ -5026,8 +5238,13 @@
             state.redoStack.push(current);
 
             const previous = state.undoStack[state.undoStack.length - 1];
-            loadHtmlIntoFrame(previous, false);
+            const html = previous.html || previous;
+            loadHtmlIntoFrame(html, false);
             updateUndoButtons();
+
+            // Show toast for undo action
+            const type = current.type || 'default';
+            showToast('info', 'Undo', `Undid ${CHANGE_TYPES[type] || type}`);
         }
 
         function redo() {
@@ -5036,13 +5253,48 @@
             const next = state.redoStack.pop();
             state.undoStack.push(next);
 
-            loadHtmlIntoFrame(next, false);
+            const html = next.html || next;
+            loadHtmlIntoFrame(html, false);
             updateUndoButtons();
+
+            // Show toast for redo action
+            const type = next.type || 'default';
+            showToast('info', 'Redo', `Redid ${CHANGE_TYPES[type] || type}`);
+        }
+
+        function getUndoLabel() {
+            if (state.undoStack.length <= 1) return 'Undo';
+            const entry = state.undoStack[state.undoStack.length - 1];
+            const type = entry.type || 'default';
+            return `Undo ${CHANGE_TYPES[type] || type}`;
+        }
+
+        function getRedoLabel() {
+            if (state.redoStack.length === 0) return 'Redo';
+            const entry = state.redoStack[state.redoStack.length - 1];
+            const type = entry.type || 'default';
+            return `Redo ${CHANGE_TYPES[type] || type}`;
         }
 
         function updateUndoButtons() {
             elements.btnUndo.disabled = state.undoStack.length <= 1;
             elements.btnRedo.disabled = state.redoStack.length === 0;
+
+            // Update button titles with descriptive labels
+            elements.btnUndo.title = getUndoLabel();
+            elements.btnRedo.title = getRedoLabel();
+
+            // Update context menu items if they exist
+            const ctxUndo = document.getElementById('ctx-undo');
+            const ctxRedo = document.getElementById('ctx-redo');
+            if (ctxUndo) {
+                ctxUndo.querySelector('.context-menu-item-label').textContent = getUndoLabel();
+                ctxUndo.classList.toggle('disabled', state.undoStack.length <= 1);
+            }
+            if (ctxRedo) {
+                ctxRedo.querySelector('.context-menu-item-label').textContent = getRedoLabel();
+                ctxRedo.classList.toggle('disabled', state.redoStack.length === 0);
+            }
         }
 
         // =========================================================================
@@ -5129,10 +5381,9 @@
                 elements.btnInsert.disabled = false;
                 state.documentLoaded = true;
 
-                // Reset zoom and center on load
-                state.zoom = 1;
+                // Auto-fit to screen on load
                 requestAnimationFrame(() => {
-                    centerCanvas();
+                    fitToScreen();
                 });
 
                 // Scan for document colors
@@ -5414,7 +5665,8 @@
                 if (!e.defaultPrevented) {
                     selectElementByPath(path, {
                         addToSelection: e.shiftKey,
-                        toggleSelection: e.ctrlKey || e.metaKey
+                        toggleSelection: e.ctrlKey || e.metaKey,
+                        scrollToElement: true  // Scroll canvas to show element
                     });
                 }
             });
@@ -5532,7 +5784,7 @@
 
             if (!sourceElement || !targetElement) return;
 
-            saveState();
+            saveState('move');
 
             sourceElement.classList.remove('editor-selected', 'editor-hover');
 
@@ -5568,7 +5820,7 @@
             const tag = sourceElement.tagName.toUpperCase();
             if (tag === 'BODY' || tag === 'HTML' || tag === 'HEAD') return;
 
-            saveState();
+            saveState('duplicate');
 
             // Clone the element
             const clone = sourceElement.cloneNode(true);
@@ -5952,7 +6204,7 @@
             elements.textSearchResults.querySelectorAll('.text-search-result').forEach(resultEl => {
                 resultEl.addEventListener('click', () => {
                     const path = resultEl.dataset.path.split(',').map(Number);
-                    selectElementByPath(path);
+                    selectElementByPath(path, { scrollToElement: true });
                 });
             });
         }
@@ -6066,8 +6318,42 @@
             return element;
         }
 
+        // Scroll canvas to center element in view
+        function scrollCanvasToElement(element) {
+            if (!element || !elements.previewFrame || !elements.canvasWrapper) return;
+
+            try {
+                // Get absolute position within iframe document using offsetLeft/offsetTop
+                // This gives correct coordinates regardless of scroll/pan state
+                let offsetX = 0, offsetY = 0;
+                let el = element;
+                while (el) {
+                    offsetX += el.offsetLeft;
+                    offsetY += el.offsetTop;
+                    el = el.offsetParent;
+                }
+
+                // Calculate element center in iframe document coordinates
+                const elementCenterX = offsetX + element.offsetWidth / 2;
+                const elementCenterY = offsetY + element.offsetHeight / 2;
+
+                // Get canvas viewport dimensions
+                const canvasRect = elements.canvasWrapper.getBoundingClientRect();
+                const viewportWidth = canvasRect.width;
+                const viewportHeight = canvasRect.height;
+
+                // Calculate the pan needed to center this element in the viewport
+                // Formula: pan = viewport_center - (element_center * zoom)
+                state.panX = (viewportWidth / 2) - (elementCenterX * state.zoom);
+                state.panY = (viewportHeight / 2) - (elementCenterY * state.zoom);
+                updateTransform();
+            } catch (e) {
+                // Silently fail if element is not accessible
+            }
+        }
+
         function selectElementByPath(path, options = {}) {
-            const { addToSelection = false, toggleSelection = false } = options;
+            const { addToSelection = false, toggleSelection = false, scrollToElement = false } = options;
             const pathStr = path.join(',');
 
             // Check if already selected
@@ -6108,6 +6394,11 @@
                 if (treeNode) {
                     treeNode.classList.add('selected');
                     treeNode.scrollIntoView({ block: 'nearest' });
+                }
+
+                // Scroll canvas to show element (when clicking from tree)
+                if (scrollToElement) {
+                    scrollCanvasToElement(element);
                 }
 
                 showProperties(element);
@@ -6204,7 +6495,7 @@
             }
 
             // Save state for undo
-            saveState();
+            saveState('delete');
 
             // Remove all deletable elements
             deletableElements.forEach(element => {
@@ -6255,7 +6546,7 @@
             if (duplicatableElements.length === 0) return false;
 
             // Save state for undo
-            saveState();
+            saveState('duplicate');
 
             // Duplicate each element right after its original
             const newElements = [];
@@ -6300,7 +6591,7 @@
             if (state.selectedElements.length === 0) return false;
 
             // Save state for undo
-            saveState();
+            saveState('move');
 
             state.selectedElements.forEach(element => {
                 const style = element.style;
@@ -6331,7 +6622,7 @@
             const doc = frame.contentDocument || frame.contentWindow.document;
 
             // Save state for undo
-            saveState();
+            saveState('paste');
 
             // Paste as children of the currently selected element
             const target = state.selectedElement;
@@ -6374,7 +6665,7 @@
             const finishEdit = () => {
                 element.contentEditable = false;
                 if (element.textContent !== originalText) {
-                    saveState();
+                    saveState('text');
                     if (state.selectedElement === element) {
                         elements.propText.value = element.textContent;
                     }
@@ -6639,7 +6930,7 @@
                 return;
             }
 
-            saveState();
+            saveState('style');
 
             if (type === 'text') {
                 state.selectedElement.style.color = color;
@@ -6733,7 +7024,7 @@
             const doc = frame.contentDocument || frame.contentWindow.document;
             if (!doc.body) return;
 
-            saveState();
+            saveState('style');
 
             let replacedCount = 0;
             const allElements = doc.body.querySelectorAll('*:not(script):not(style)');
@@ -6777,7 +7068,7 @@
             const doc = frame.contentDocument || frame.contentWindow.document;
             if (!doc.body) return;
 
-            saveState();
+            saveState('style');
 
             let changedCount = 0;
             const allElements = doc.body.querySelectorAll('*:not(script):not(style):not(#editor-styles)');
@@ -7015,7 +7306,7 @@
                 loadGoogleFont(font);
             }
 
-            saveState();
+            saveState('style');
             state.selectedElement.style.fontFamily = '"' + font + '", sans-serif';
 
             addToRecentFonts(font);
@@ -7091,7 +7382,7 @@
         function toggleFontStyle(style) {
             if (!state.selectedElement) return;
 
-            saveState();
+            saveState('style');
 
             const computed = state.selectedElement.ownerDocument.defaultView.getComputedStyle(state.selectedElement);
 
@@ -7161,7 +7452,7 @@
         function pasteElementStyle(element, styleData) {
             if (!element || !styleData || !styleData.styles) return false;
 
-            saveState();
+            saveState('style');
 
             Object.entries(styleData.styles).forEach(([prop, value]) => {
                 element.style[prop] = value;
@@ -7260,7 +7551,9 @@
         function applyProperty(property, value) {
             if (!state.selectedElement) return;
 
-            saveState();
+            // Track change type for undo
+            const changeType = property === 'text' ? 'text' : 'style';
+            saveState(changeType);
 
             if (property === 'text') {
                 state.selectedElement.textContent = value;
@@ -7416,7 +7709,7 @@
             elements.resizeOverlay.classList.add('resizing');
             document.body.style.cursor = getComputedStyle(e.target).cursor;
 
-            saveState();
+            saveState('resize');
         }
 
         function doResize(e) {
@@ -7530,7 +7823,7 @@
             elements.resizeOverlay.classList.add('moving');
             document.body.style.cursor = 'move';
 
-            saveState();
+            saveState('move');
         }
 
         function doMove(e) {
@@ -7850,7 +8143,7 @@
 
             document.body.style.cursor = side === 'top' || side === 'bottom' ? 'ns-resize' : 'ew-resize';
 
-            saveState();
+            saveState('spacing');
         }
 
         function doSpacingDrag(e) {
@@ -7937,7 +8230,7 @@
         function applySpacingPreset(value, type, side) {
             if (!state.selectedElement) return;
 
-            saveState();
+            saveState('spacing');
 
             const element = state.selectedElement;
 
@@ -8104,7 +8397,10 @@
             const item = e.target.closest('.dropdown-item');
             if (item) {
                 const tagName = item.dataset.tag;
-                if (tagName) {
+                const templateName = item.dataset.template;
+                if (templateName) {
+                    insertTemplate(templateName);
+                } else if (tagName) {
                     insertElement(tagName);
                 }
             }
@@ -8152,6 +8448,26 @@
                     e.preventDefault();
                     deleteSelectedElement();
                 }
+            }
+
+            // Zoom with +/- keys
+            if ((e.key === '=' || e.key === '+') && !isInputFocused && state.documentLoaded) {
+                e.preventDefault();
+                zoomIn();
+            }
+            if (e.key === '-' && !isInputFocused && state.documentLoaded) {
+                e.preventDefault();
+                zoomOut();
+            }
+            // Zoom reset with 0 key
+            if (e.key === '0' && !isInputFocused && state.documentLoaded) {
+                e.preventDefault();
+                resetZoom();
+            }
+            // Fit to screen with 1 key
+            if (e.key === '1' && !isInputFocused && state.documentLoaded) {
+                e.preventDefault();
+                fitToScreen();
             }
 
             // Grid toggle with G key
@@ -8404,6 +8720,26 @@
 
         // Spacing overlay
         initSpacingOverlay();
+
+        // First-time tooltip (shows hint on first visit)
+        (function initFirstTimeTooltip() {
+            const STORAGE_KEY = 'html-editor-tooltip-shown';
+            if (localStorage.getItem(STORAGE_KEY)) return;
+
+            const tooltip = document.createElement('div');
+            tooltip.className = 'first-time-tooltip';
+            tooltip.textContent = 'Click to select, double-click to edit text';
+            elements.canvasViewport.appendChild(tooltip);
+
+            const dismissTooltip = () => {
+                tooltip.classList.add('hiding');
+                localStorage.setItem(STORAGE_KEY, 'true');
+                setTimeout(() => tooltip.remove(), 200);
+                document.removeEventListener('click', dismissTooltip);
+            };
+
+            setTimeout(() => document.addEventListener('click', dismissTooltip), 100);
+        })();
 
         // Initialize transform
         updateTransform();

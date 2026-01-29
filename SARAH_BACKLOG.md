@@ -2,30 +2,32 @@
 
 Based on USER_JOURNEY_SARAH.md research.
 
-## In Progress (3 builders)
-- [ ] Visual insert menu (builder-1)
-- [ ] First-time tooltip (builder-2)
-- [ ] Hide keyboard shortcuts (builder-3)
-
-## Ready to Assign
-
-## Bigger Tasks
-- [ ] Template library - Slide, Card, Hero presets
-- [ ] Visual insert menu with previews
-- [ ] Terminology rename (DOM Tree → Page Structure)
-- [ ] Global color find/replace
-
-## Quick Wins (copy changes)
-- [ ] "Export HTML" → "Download"
-- [ ] "Tag" → "Type" in properties
-- [ ] "Typography" → "Text Style"
-- [ ] "Elements" → "Page Structure"
+## Status: 🎉 13 improvements shipped!
 
 ## Done
 - [x] Inline text editing + visual feedback + hint
-- [x] Color picker shows actual color + "Apply to all"
+- [x] Color picker shows actual color + "Apply to all matching"
 - [x] Font size dropdown (Small/Medium/Large/etc)
 - [x] Duplicate section (right-click → clone with children)
 - [x] Friendly element names (Title not h1)
 - [x] Text content search (find typos)
 - [x] Terminology renames (Download, Page Structure, Text Style)
+- [x] Visual insert menu (friendly names + icons)
+- [x] First-time tooltip (localStorage persistence)
+- [x] Hide keyboard shortcuts
+- [x] Template library (Slide, Card, Hero)
+- [x] Undo/redo for style changes
+- [x] Responsive preview modes (Desktop/Tablet/Phone)
+
+## Remaining (nice to have)
+- [ ] "Tag" → "Type" label in properties panel
+- [ ] AI-assisted editing ("Make the title teal")
+- [ ] Design tokens (define brand colors once)
+- [ ] Version history
+
+## Sarah's Critical Pain Points - ALL ADDRESSED ✅
+1. ~~No inline text editing~~ → Double-click to edit
+2. ~~Color picker shows wrong color~~ → Shows actual + apply all
+3. ~~No duplicate section~~ → Right-click duplicate
+4. ~~px units confusing~~ → Friendly dropdown
+5. ~~Code terminology~~ → Human-friendly names
