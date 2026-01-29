@@ -788,6 +788,43 @@
             transition: width var(--transition-slow), height var(--transition-slow);
         }
 
+        /* === FIRST-TIME TOOLTIP === */
+        .first-time-tooltip {
+            position: absolute;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(0, 0, 0, 0.85);
+            color: white;
+            padding: 12px 20px;
+            border-radius: 8px;
+            font-size: 14px;
+            z-index: 1000;
+            pointer-events: none;
+            animation: tooltipFadeIn 0.3s ease-out;
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            text-align: center;
+            max-width: 280px;
+        }
+        .first-time-tooltip::after {
+            content: 'Click anywhere to dismiss';
+            display: block;
+            font-size: 11px;
+            opacity: 0.6;
+            margin-top: 6px;
+        }
+        @keyframes tooltipFadeIn {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        @keyframes tooltipFadeOut {
+            from { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+            to { opacity: 0; transform: translate(-50%, -50%) scale(0.95); }
+        }
+        .first-time-tooltip.hiding {
+            animation: tooltipFadeOut 0.2s ease-in forwards;
+        }
+
         /* === DEVICE FRAMES === */
         .device-frame {
             position: relative;
@@ -1772,16 +1809,26 @@
             line-height: 1.5;
         }
 
-        /* === KEYBOARD HINTS === */
+        /* === KEYBOARD HINTS (hidden by default - intimidates non-coders) === */
         .shortcuts-hint {
-            margin-top: var(--space-10);
+            display: none; /* Hidden from welcome screen */
+        }
+
+        .shortcuts-help-link {
+            margin-top: var(--space-8);
             font-size: var(--text-xs);
             color: var(--text-muted);
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            gap: var(--space-4);
-            flex-wrap: wrap;
+            text-align: center;
+        }
+
+        .shortcuts-help-link a {
+            color: var(--text-secondary);
+            text-decoration: none;
+            cursor: pointer;
+        }
+
+        .shortcuts-help-link a:hover {
+            color: var(--accent);
         }
 
         .shortcut-item {
@@ -1790,7 +1837,7 @@
             gap: var(--space-2);
         }
 
-        .shortcuts-hint kbd {
+        kbd {
             background: var(--bg-muted);
             border: 1px solid var(--border-subtle);
             border-radius: var(--radius-sm);
@@ -1798,6 +1845,99 @@
             font-family: var(--font-mono);
             font-size: 10px;
             color: var(--text-secondary);
+        }
+
+        /* === SHORTCUTS MODAL === */
+        .shortcuts-modal-overlay {
+            position: fixed;
+            inset: 0;
+            background: rgba(0, 0, 0, 0.6);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 10001;
+            opacity: 0;
+            visibility: hidden;
+            transition: opacity var(--transition-base), visibility var(--transition-base);
+        }
+
+        .shortcuts-modal-overlay.visible {
+            opacity: 1;
+            visibility: visible;
+        }
+
+        .shortcuts-modal {
+            background: var(--bg-elevated);
+            border-radius: var(--radius-xl);
+            padding: var(--space-6);
+            max-width: 480px;
+            width: 90%;
+            box-shadow: var(--shadow-xl);
+            transform: scale(0.95);
+            transition: transform var(--transition-base);
+        }
+
+        .shortcuts-modal-overlay.visible .shortcuts-modal {
+            transform: scale(1);
+        }
+
+        .shortcuts-modal-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: var(--space-4);
+        }
+
+        .shortcuts-modal-title {
+            font-size: var(--text-lg);
+            font-weight: 600;
+            color: var(--text);
+        }
+
+        .shortcuts-modal-close {
+            background: none;
+            border: none;
+            color: var(--text-muted);
+            font-size: 20px;
+            cursor: pointer;
+            padding: var(--space-1);
+            line-height: 1;
+        }
+
+        .shortcuts-modal-close:hover {
+            color: var(--text);
+        }
+
+        .shortcuts-list {
+            display: grid;
+            gap: var(--space-2);
+        }
+
+        .shortcut-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            padding: var(--space-2) 0;
+            border-bottom: 1px solid var(--border-subtle);
+        }
+
+        .shortcut-row:last-child {
+            border-bottom: none;
+        }
+
+        .shortcut-action {
+            color: var(--text);
+            font-size: var(--text-sm);
+        }
+
+        .shortcut-keys {
+            display: flex;
+            gap: var(--space-1);
+        }
+
+        .shortcut-keys kbd {
+            font-size: 11px;
+            padding: 3px 8px;
         }
 
         /* === CONTEXT MENU === */
@@ -1866,6 +2006,12 @@
             color: var(--text-muted);
             margin-left: var(--space-4);
             font-family: var(--font-mono);
+            opacity: 0;
+            transition: opacity var(--transition-fast);
+        }
+
+        .context-menu-item:hover .context-menu-item-shortcut {
+            opacity: 1;
         }
 
         .context-menu-divider {
@@ -2756,53 +2902,50 @@
             <div class="toolbar-section">
                 <div class="dropdown" id="insert-dropdown">
                     <button class="btn" id="btn-insert" disabled>
-                        <span>+ Insert</span>
+                        <span>+ Add</span>
                     </button>
                     <div class="dropdown-menu" id="insert-menu">
                         <div class="dropdown-section">
                             <div class="dropdown-section-title">Layout</div>
-                            <div class="dropdown-item" data-tag="div"><span class="dropdown-item-icon">▢</span>div</div>
-                            <div class="dropdown-item" data-tag="section"><span class="dropdown-item-icon">§</span>section</div>
-                            <div class="dropdown-item" data-tag="header"><span class="dropdown-item-icon">▤</span>header</div>
-                            <div class="dropdown-item" data-tag="footer"><span class="dropdown-item-icon">▥</span>footer</div>
-                            <div class="dropdown-item" data-tag="nav"><span class="dropdown-item-icon">☰</span>nav</div>
+                            <div class="dropdown-item" data-tag="div"><span class="dropdown-item-icon">📦</span>Container</div>
+                            <div class="dropdown-item" data-tag="section"><span class="dropdown-item-icon">📄</span>Page Section</div>
+                            <div class="dropdown-item" data-tag="header"><span class="dropdown-item-icon">🔝</span>Page Header</div>
+                            <div class="dropdown-item" data-tag="footer"><span class="dropdown-item-icon">🔚</span>Page Footer</div>
+                            <div class="dropdown-item" data-tag="nav"><span class="dropdown-item-icon">☰</span>Navigation</div>
                         </div>
                         <div class="dropdown-section">
                             <div class="dropdown-section-title">Text</div>
-                            <div class="dropdown-item" data-tag="p"><span class="dropdown-item-icon">¶</span>p</div>
-                            <div class="dropdown-item" data-tag="span"><span class="dropdown-item-icon">⊡</span>span</div>
-                            <div class="dropdown-item" data-tag="h1"><span class="dropdown-item-icon">H1</span>h1</div>
-                            <div class="dropdown-item" data-tag="h2"><span class="dropdown-item-icon">H2</span>h2</div>
-                            <div class="dropdown-item" data-tag="h3"><span class="dropdown-item-icon">H3</span>h3</div>
-                            <div class="dropdown-item" data-tag="h4"><span class="dropdown-item-icon">H4</span>h4</div>
-                            <div class="dropdown-item" data-tag="h5"><span class="dropdown-item-icon">H5</span>h5</div>
-                            <div class="dropdown-item" data-tag="h6"><span class="dropdown-item-icon">H6</span>h6</div>
+                            <div class="dropdown-item" data-tag="h1"><span class="dropdown-item-icon">𝐇</span>Title</div>
+                            <div class="dropdown-item" data-tag="h2"><span class="dropdown-item-icon">𝐡</span>Subtitle</div>
+                            <div class="dropdown-item" data-tag="h3"><span class="dropdown-item-icon">H3</span>Heading 3</div>
+                            <div class="dropdown-item" data-tag="p"><span class="dropdown-item-icon">¶</span>Text Block</div>
+                            <div class="dropdown-item" data-tag="span"><span class="dropdown-item-icon">Aa</span>Inline Text</div>
                         </div>
                         <div class="dropdown-section">
                             <div class="dropdown-section-title">Interactive</div>
-                            <div class="dropdown-item" data-tag="button"><span class="dropdown-item-icon">⊞</span>button</div>
-                            <div class="dropdown-item" data-tag="a"><span class="dropdown-item-icon">🔗</span>a (link)</div>
-                            <div class="dropdown-item" data-tag="input"><span class="dropdown-item-icon">⊟</span>input</div>
+                            <div class="dropdown-item" data-tag="button"><span class="dropdown-item-icon">🔘</span>Button</div>
+                            <div class="dropdown-item" data-tag="a"><span class="dropdown-item-icon">🔗</span>Link</div>
+                            <div class="dropdown-item" data-tag="input"><span class="dropdown-item-icon">✏️</span>Input Field</div>
                         </div>
                         <div class="dropdown-section">
                             <div class="dropdown-section-title">Media</div>
-                            <div class="dropdown-item" data-tag="img"><span class="dropdown-item-icon">🖼</span>img</div>
+                            <div class="dropdown-item" data-tag="img"><span class="dropdown-item-icon">🖼️</span>Image</div>
                         </div>
                         <div class="dropdown-section">
                             <div class="dropdown-section-title">Lists</div>
-                            <div class="dropdown-item" data-tag="ul"><span class="dropdown-item-icon">•</span>ul (list)</div>
-                            <div class="dropdown-item" data-tag="ol"><span class="dropdown-item-icon">1.</span>ol (numbered)</div>
-                            <div class="dropdown-item" data-tag="li"><span class="dropdown-item-icon">·</span>li (item)</div>
+                            <div class="dropdown-item" data-tag="ul"><span class="dropdown-item-icon">•</span>Bullet List</div>
+                            <div class="dropdown-item" data-tag="ol"><span class="dropdown-item-icon">1.</span>Numbered List</div>
+                            <div class="dropdown-item" data-tag="li"><span class="dropdown-item-icon">→</span>List Item</div>
                         </div>
                     </div>
                 </div>
             </div>
 
             <div class="toolbar-section">
-                <button class="btn" id="btn-undo" disabled title="Undo (Ctrl+Z)">
+                <button class="btn" id="btn-undo" disabled title="Undo">
                     <span>Undo</span>
                 </button>
-                <button class="btn" id="btn-redo" disabled title="Redo (Ctrl+Y)">
+                <button class="btn" id="btn-redo" disabled title="Redo">
                     <span>Redo</span>
                 </button>
             </div>
@@ -2821,7 +2964,7 @@
                 <button class="btn btn-icon" id="btn-zoom-out" title="Zoom Out (-)">−</button>
                 <span class="zoom-level" id="zoom-level" title="Click to reset to 100%">100%</span>
                 <button class="btn btn-icon" id="btn-zoom-in" title="Zoom In (+)">+</button>
-                <button class="btn" id="btn-fit" title="Fit to Screen (Ctrl+0)">Fit</button>
+                <button class="btn" id="btn-fit" title="Fit to Screen">Fit</button>
                 <button class="btn btn-icon" id="btn-grid" title="Toggle Grid (G)">⊞</button>
             </div>
 
@@ -2848,15 +2991,15 @@
                 <button class="btn btn-icon" id="btn-theme" title="Toggle Dark/Light Mode">
                     <span id="theme-icon">☀️</span>
                 </button>
-                <button class="btn btn-primary" id="btn-export" disabled title="Download modified HTML">
-                    <span>Export HTML</span>
+                <button class="btn btn-primary" id="btn-export" disabled title="Download your file">
+                    <span>Download</span>
                 </button>
             </div>
         </header>
 
         <!-- Element Tree -->
         <aside class="sidebar-left">
-            <div class="sidebar-header">Elements</div>
+            <div class="sidebar-header">Page Structure</div>
             <div class="tree-search">
                 <div class="tree-search-wrapper" id="tree-search-wrapper">
                     <span class="tree-search-icon">🔍</span>
@@ -2911,16 +3054,13 @@
                         </div>
                         <div class="feature-card">
                             <div class="feature-icon">🌳</div>
-                            <div class="feature-title">DOM Tree</div>
-                            <div class="feature-desc">Drag to reorder, Alt+drag to duplicate</div>
+                            <div class="feature-title">Page Structure</div>
+                            <div class="feature-desc">Drag elements to reorder them</div>
                         </div>
                     </div>
 
-                    <div class="shortcuts-hint">
-                        <span class="shortcut-item"><kbd>⌘Z</kbd> Undo</span>
-                        <span class="shortcut-item"><kbd>⌘D</kbd> Duplicate</span>
-                        <span class="shortcut-item"><kbd>↑↓←→</kbd> Nudge</span>
-                        <span class="shortcut-item"><kbd>Space</kbd> Pan</span>
+                    <div class="shortcuts-help-link">
+                        <a id="show-shortcuts-link">Keyboard shortcuts available</a>
                     </div>
                 </div>
             </div>
@@ -3025,7 +3165,7 @@
 
                 <!-- Typography Section -->
                 <div class="property-section">
-                    <div class="property-section-title">Typography</div>
+                    <div class="property-section-title">Text Style</div>
                     <div class="property-row">
                         <label class="property-label">Font Size</label>
                         <select class="property-input property-select" id="prop-font-size">
@@ -3219,6 +3359,58 @@
     <!-- Spacing Drag Value Display -->
     <div class="spacing-drag-value" id="spacing-drag-value">0px</div>
 
+    <!-- Shortcuts Modal -->
+    <div class="shortcuts-modal-overlay" id="shortcuts-modal">
+        <div class="shortcuts-modal">
+            <div class="shortcuts-modal-header">
+                <div class="shortcuts-modal-title">Keyboard Shortcuts</div>
+                <button class="shortcuts-modal-close" id="shortcuts-modal-close">&times;</button>
+            </div>
+            <div class="shortcuts-list">
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Undo</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Z</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Redo</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>Y</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Delete element</span>
+                    <span class="shortcut-keys"><kbd>Del</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Duplicate element</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>D</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Copy element</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>C</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Paste element</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>V</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Nudge element</span>
+                    <span class="shortcut-keys"><kbd>↑</kbd><kbd>↓</kbd><kbd>←</kbd><kbd>→</kbd></span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Pan canvas</span>
+                    <span class="shortcut-keys"><kbd>Space</kbd> + drag</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Zoom</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd> + scroll</span>
+                </div>
+                <div class="shortcut-row">
+                    <span class="shortcut-action">Fit to screen</span>
+                    <span class="shortcut-keys"><kbd>Ctrl</kbd><kbd>0</kbd></span>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Context Menu -->
     <!-- Quick Actions Toolbar -->
     <div class="quick-actions" id="quick-actions">
@@ -3408,7 +3600,7 @@
         <div class="style-clipboard-icon">🎨</div>
         <div>
             <div class="style-clipboard-text">Style copied</div>
-            <div class="style-clipboard-hint">Click element or ⇧⌘V to paste</div>
+            <div class="style-clipboard-hint">Click an element to apply this style</div>
         </div>
         <button class="style-clipboard-clear" id="style-clipboard-clear" title="Clear style clipboard">✕</button>
     </div>
@@ -3706,7 +3898,11 @@
             replaceNewColor: document.getElementById('replace-new-color'),
             replaceNewColorValue: document.getElementById('replace-new-color-value'),
             btnCancelReplace: document.getElementById('btn-cancel-replace'),
-            btnConfirmReplace: document.getElementById('btn-confirm-replace')
+            btnConfirmReplace: document.getElementById('btn-confirm-replace'),
+            // Shortcuts modal
+            shortcutsModal: document.getElementById('shortcuts-modal'),
+            shortcutsModalClose: document.getElementById('shortcuts-modal-close'),
+            showShortcutsLink: document.getElementById('show-shortcuts-link')
         };
 
         // =========================================================================
@@ -5097,7 +5293,7 @@
                     depth: depth,
                     path: path,
                     tagName: element.tagName,
-                    label: element.tagName.toLowerCase() + id + cls
+                    label: getFriendlyName(element.tagName) + id + cls
                 });
 
                 Array.from(element.children).forEach((child, i) => {
@@ -5395,6 +5591,72 @@
             // Select the cloned element
             const newPath = getElementPath(clone, doc.body);
             selectElementByPath(newPath);
+        }
+
+        // Friendly names for HTML elements (for non-technical users)
+        function getFriendlyName(tagName) {
+            const names = {
+                'DIV': 'Container',
+                'SPAN': 'Text',
+                'P': 'Paragraph',
+                'H1': 'Title',
+                'H2': 'Subtitle',
+                'H3': 'Heading',
+                'H4': 'Heading',
+                'H5': 'Heading',
+                'H6': 'Heading',
+                'A': 'Link',
+                'IMG': 'Image',
+                'BUTTON': 'Button',
+                'INPUT': 'Input Field',
+                'TEXTAREA': 'Text Area',
+                'SELECT': 'Dropdown',
+                'FORM': 'Form',
+                'UL': 'Bullet List',
+                'OL': 'Numbered List',
+                'LI': 'List Item',
+                'TABLE': 'Table',
+                'TR': 'Table Row',
+                'TD': 'Table Cell',
+                'TH': 'Table Header',
+                'THEAD': 'Table Head',
+                'TBODY': 'Table Body',
+                'HEADER': 'Header',
+                'FOOTER': 'Footer',
+                'NAV': 'Navigation',
+                'SECTION': 'Page Section',
+                'ARTICLE': 'Article',
+                'ASIDE': 'Sidebar',
+                'MAIN': 'Main Content',
+                'BODY': 'Page Body',
+                'LABEL': 'Label',
+                'STRONG': 'Bold Text',
+                'EM': 'Italic Text',
+                'B': 'Bold',
+                'I': 'Italic',
+                'U': 'Underline',
+                'BR': 'Line Break',
+                'HR': 'Divider',
+                'BLOCKQUOTE': 'Quote',
+                'CODE': 'Code',
+                'PRE': 'Code Block',
+                'VIDEO': 'Video',
+                'AUDIO': 'Audio',
+                'IFRAME': 'Embedded Frame',
+                'CANVAS': 'Canvas',
+                'SVG': 'Vector Graphic',
+                'FIGURE': 'Figure',
+                'FIGCAPTION': 'Caption'
+            };
+            const friendly = names[tagName];
+            if (friendly) {
+                // Show "Title (h1)" format for headings, just friendly name for others
+                if (tagName.match(/^H[1-6]$/)) {
+                    return friendly + ' (' + tagName.toLowerCase() + ')';
+                }
+                return friendly;
+            }
+            return tagName.toLowerCase();
         }
 
         function getElementIcon(tagName) {
@@ -6916,7 +7178,7 @@
 
             state.styleClipboard = copyElementStyle(state.selectedElement);
             showStyleClipboardIndicator();
-            showToast('success', 'Style copied', 'Click another element or use ⇧⌘V to paste');
+            showToast('success', 'Style copied', 'Click another element to apply this style');
         }
 
         function pasteStyle() {
@@ -6926,7 +7188,7 @@
             }
 
             if (!state.styleClipboard) {
-                showToast('warning', 'No style', 'Copy a style first with ⇧⌘C');
+                showToast('warning', 'No style', 'Right-click an element and choose "Copy Style" first');
                 return;
             }
 
@@ -8095,6 +8357,34 @@
 
         elements.propWidth.addEventListener('change', (e) => applyProperty('width', e.target.value));
         elements.propHeight.addEventListener('change', (e) => applyProperty('height', e.target.value));
+
+        // Shortcuts modal
+        function showShortcutsModal() {
+            elements.shortcutsModal.classList.add('visible');
+        }
+
+        function hideShortcutsModal() {
+            elements.shortcutsModal.classList.remove('visible');
+        }
+
+        elements.showShortcutsLink?.addEventListener('click', showShortcutsModal);
+        elements.shortcutsModalClose.addEventListener('click', hideShortcutsModal);
+        elements.shortcutsModal.addEventListener('click', (e) => {
+            if (e.target === elements.shortcutsModal) {
+                hideShortcutsModal();
+            }
+        });
+
+        // Press ? to show shortcuts
+        document.addEventListener('keydown', (e) => {
+            if (e.key === '?' && !e.target.matches('input, textarea, [contenteditable]')) {
+                e.preventDefault();
+                showShortcutsModal();
+            }
+            if (e.key === 'Escape' && elements.shortcutsModal.classList.contains('visible')) {
+                hideShortcutsModal();
+            }
+        });
 
         // Initialize theme
         initTheme();
